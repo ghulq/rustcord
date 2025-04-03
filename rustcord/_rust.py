@@ -114,7 +114,7 @@ class DiscordClient:
         self.api_base = "https://discord.com/api/v10"
         self.headers = {
             "Authorization": f"Bot {self.token}",
-            "User-Agent": "RustCord/0.1.0",
+            "User-Agent": "RustCord/0.1.2",
             "Content-Type": "application/json"
         }
         self.session = None
