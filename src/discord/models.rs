@@ -292,15 +292,19 @@ impl User {
 
 /// Discord Channel model
 #[pyclass]
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct Channel {
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub id: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub name: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub channel_type: u8,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub guild_id: Option<String>,
 }
 
@@ -336,31 +340,7 @@ impl Channel {
 
 impl Channel {
     pub fn from_json(data: Value) -> Self {
-        let id = data
-            .get("id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let name = data
-            .get("name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let channel_type = data.get("type").and_then(|v| v.as_u64()).unwrap_or(0) as u8;
-
-        let guild_id = data
-            .get("guild_id")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-
-        Self {
-            id,
-            name,
-            channel_type,
-            guild_id,
-        }
+        serde_json::from_value(data).unwrap()
     }
 }
 
@@ -556,13 +536,16 @@ impl AudioPlayer {
 
 /// Discord Guild (Server) model
 #[pyclass]
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct Guild {
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub id: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub name: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub owner_id: String,
 }
 
@@ -587,24 +570,6 @@ impl Guild {
 
 impl Guild {
     pub fn from_json(data: Value) -> Self {
-        let id = data
-            .get("id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let name = data
-            .get("name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let owner_id = data
-            .get("owner_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        Self { id, name, owner_id }
+        serde_json::from_value(data).unwrap()
     }
 }
