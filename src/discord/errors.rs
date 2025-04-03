@@ -1,31 +1,31 @@
-use pyo3::prelude::*;
-use pyo3::exceptions::{PyRuntimeError, PyConnectionError, PyValueError};
 use pyo3::PyErr;
+use pyo3::exceptions::{PyConnectionError, PyRuntimeError, PyValueError};
+use pyo3::prelude::*;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DiscordError {
     #[error("API error: {0}")]
     ApiError(String),
-    
+
     #[error("Invalid token: {0}")]
     InvalidToken(String),
-    
+
     #[error("HTTP client error: {0}")]
     HttpClientError(String),
-    
+
     #[error("Runtime error: {0}")]
     RuntimeError(String),
-    
+
     #[error("Parse error: {0}")]
     ParseError(String),
-    
+
     #[error("Connection error: {0}")]
     ConnectionError(String),
-    
+
     #[error("Not connected: {0}")]
     NotConnected(String),
-    
+
     #[error("Mutex error: {0}")]
     MutexError(String),
 }
@@ -63,7 +63,7 @@ impl DiscordErrorPy {
             error_type,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
         format!("DiscordError[{}]: {}", self.error_type, self.message)
     }

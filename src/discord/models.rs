@@ -34,7 +34,7 @@ pub struct VoiceState {
 impl VoiceState {
     #[new]
     pub fn new(
-        user_id: String, 
+        user_id: String,
         session_id: String,
         guild_id: Option<String>,
         channel_id: Option<String>,
@@ -60,17 +60,18 @@ impl VoiceState {
             suppress,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
-        format!("<VoiceState user_id={} channel_id={}>", 
-            self.user_id, 
+        format!(
+            "<VoiceState user_id={} channel_id={}>",
+            self.user_id,
             match &self.channel_id {
                 Some(id) => id,
                 None => "None",
             }
         )
     }
-    
+
     pub fn __repr__(&self) -> String {
         format!(
             "VoiceState(user_id='{}', session_id='{}', channel_id={}, guild_id={})",
@@ -90,52 +91,57 @@ impl VoiceState {
 
 impl VoiceState {
     pub fn from_json(data: Value) -> Self {
-        let guild_id = data.get("guild_id")
+        let guild_id = data
+            .get("guild_id")
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
-            
-        let channel_id = data.get("channel_id")
+
+        let channel_id = data
+            .get("channel_id")
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
-            
-        let user_id = data.get("user_id")
+
+        let user_id = data
+            .get("user_id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let session_id = data.get("session_id")
+
+        let session_id = data
+            .get("session_id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let deaf = data.get("deaf")
+
+        let deaf = data.get("deaf").and_then(|v| v.as_bool()).unwrap_or(false);
+
+        let mute = data.get("mute").and_then(|v| v.as_bool()).unwrap_or(false);
+
+        let self_deaf = data
+            .get("self_deaf")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-            
-        let mute = data.get("mute")
+
+        let self_mute = data
+            .get("self_mute")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-            
-        let self_deaf = data.get("self_deaf")
+
+        let self_stream = data
+            .get("self_stream")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-            
-        let self_mute = data.get("self_mute")
+
+        let self_video = data
+            .get("self_video")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-            
-        let self_stream = data.get("self_stream")
+
+        let suppress = data
+            .get("suppress")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-            
-        let self_video = data.get("self_video")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-            
-        let suppress = data.get("suppress")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-            
+
         Self {
             guild_id,
             channel_id,
@@ -174,34 +180,42 @@ impl VoiceServerInfo {
             endpoint,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
-        format!("<VoiceServerInfo guild_id={} endpoint={}>", self.guild_id, self.endpoint)
+        format!(
+            "<VoiceServerInfo guild_id={} endpoint={}>",
+            self.guild_id, self.endpoint
+        )
     }
-    
+
     pub fn __repr__(&self) -> String {
-        format!("VoiceServerInfo(token='{}', guild_id='{}', endpoint='{}')",
-            self.token, self.guild_id, self.endpoint)
+        format!(
+            "VoiceServerInfo(token='{}', guild_id='{}', endpoint='{}')",
+            self.token, self.guild_id, self.endpoint
+        )
     }
 }
 
 impl VoiceServerInfo {
     pub fn from_json(data: Value) -> Self {
-        let token = data.get("token")
+        let token = data
+            .get("token")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let guild_id = data.get("guild_id")
+
+        let guild_id = data
+            .get("guild_id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let endpoint = data.get("endpoint")
+
+        let endpoint = data
+            .get("endpoint")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
+
         Self {
             token,
             guild_id,
@@ -229,7 +243,13 @@ pub struct Message {
 #[pymethods]
 impl Message {
     #[new]
-    pub fn new(id: String, channel_id: String, content: String, author_id: String, author_username: String) -> Self {
+    pub fn new(
+        id: String,
+        channel_id: String,
+        content: String,
+        author_id: String,
+        author_username: String,
+    ) -> Self {
         Self {
             id,
             channel_id,
@@ -238,46 +258,53 @@ impl Message {
             author_username,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
         format!("<Message id={} content={}>", self.id, self.content)
     }
-    
+
     pub fn __repr__(&self) -> String {
-        format!("Message(id='{}', channel_id='{}', content='{}', author_id='{}', author_username='{}')",
-            self.id, self.channel_id, self.content, self.author_id, self.author_username)
+        format!(
+            "Message(id='{}', channel_id='{}', content='{}', author_id='{}', author_username='{}')",
+            self.id, self.channel_id, self.content, self.author_id, self.author_username
+        )
     }
 }
 
 impl Message {
     pub fn from_json(data: Value) -> Self {
-        let id = data.get("id")
+        let id = data
+            .get("id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let channel_id = data.get("channel_id")
+
+        let channel_id = data
+            .get("channel_id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let content = data.get("content")
+
+        let content = data
+            .get("content")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let author_id = data.get("author")
+
+        let author_id = data
+            .get("author")
             .and_then(|v| v.get("id"))
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let author_username = data.get("author")
+
+        let author_username = data
+            .get("author")
             .and_then(|v| v.get("username"))
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
+
         Self {
             id,
             channel_id,
@@ -313,38 +340,41 @@ impl User {
             bot,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
         format!("<User id={} username={}>", self.id, self.username)
     }
-    
+
     pub fn __repr__(&self) -> String {
-        format!("User(id='{}', username='{}', discriminator='{}', bot={})",
-            self.id, self.username, self.discriminator, self.bot)
+        format!(
+            "User(id='{}', username='{}', discriminator='{}', bot={})",
+            self.id, self.username, self.discriminator, self.bot
+        )
     }
 }
 
 impl User {
     pub fn from_json(data: Value) -> Self {
-        let id = data.get("id")
+        let id = data
+            .get("id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let username = data.get("username")
+
+        let username = data
+            .get("username")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let discriminator = data.get("discriminator")
+
+        let discriminator = data
+            .get("discriminator")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let bot = data.get("bot")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-            
+
+        let bot = data.get("bot").and_then(|v| v.as_bool()).unwrap_or(false);
+
         Self {
             id,
             username,
@@ -379,41 +409,46 @@ impl Channel {
             guild_id,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
         format!("<Channel id={} name={}>", self.id, self.name)
     }
-    
+
     pub fn __repr__(&self) -> String {
-        format!("Channel(id='{}', name='{}', channel_type={}, guild_id={})",
-            self.id, self.name, self.channel_type, 
+        format!(
+            "Channel(id='{}', name='{}', channel_type={}, guild_id={})",
+            self.id,
+            self.name,
+            self.channel_type,
             match &self.guild_id {
                 Some(id) => format!("'{}'", id),
                 None => "None".to_string(),
-            })
+            }
+        )
     }
 }
 
 impl Channel {
     pub fn from_json(data: Value) -> Self {
-        let id = data.get("id")
+        let id = data
+            .get("id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let name = data.get("name")
+
+        let name = data
+            .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let channel_type = data.get("type")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0) as u8;
-            
-        let guild_id = data.get("guild_id")
+
+        let channel_type = data.get("type").and_then(|v| v.as_u64()).unwrap_or(0) as u8;
+
+        let guild_id = data
+            .get("guild_id")
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
-            
+
         Self {
             id,
             name,
@@ -468,21 +503,21 @@ impl VoiceConnection {
             self_deaf,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
-        format!("<VoiceConnection guild_id={} channel_id={} connected={}>", 
-            self.guild_id, self.channel_id, self.connected)
+        format!(
+            "<VoiceConnection guild_id={} channel_id={} connected={}>",
+            self.guild_id, self.channel_id, self.connected
+        )
     }
-    
+
     pub fn __repr__(&self) -> String {
         format!(
             "VoiceConnection(guild_id='{}', channel_id='{}', connected={})",
-            self.guild_id, 
-            self.channel_id,
-            self.connected
+            self.guild_id, self.channel_id, self.connected
         )
     }
-    
+
     /// Connect to the voice channel
     pub fn connect(&mut self) -> PyResult<()> {
         // In a real implementation, this would establish a WebSocket connection
@@ -490,20 +525,20 @@ impl VoiceConnection {
         self.connected = true;
         Ok(())
     }
-    
+
     /// Disconnect from the voice channel
     pub fn disconnect(&mut self) -> PyResult<()> {
         // In a real implementation, this would close the WebSocket connection
         self.connected = false;
         Ok(())
     }
-    
+
     /// Set self mute status
     pub fn set_self_mute(&mut self, mute: bool) -> PyResult<()> {
         self.self_mute = mute;
         Ok(())
     }
-    
+
     /// Set self deaf status
     pub fn set_self_deaf(&mut self, deaf: bool) -> PyResult<()> {
         self.self_deaf = deaf;
@@ -531,44 +566,46 @@ impl AudioPlayer {
             volume: 1.0,
         }
     }
-    
+
     pub fn __str__(&self) -> String {
-        format!("<AudioPlayer playing={} paused={} volume={}>", 
-            self.playing, self.paused, self.volume)
+        format!(
+            "<AudioPlayer playing={} paused={} volume={}>",
+            self.playing, self.paused, self.volume
+        )
     }
-    
+
     /// Attach to a voice connection
     pub fn attach(&mut self, connection: VoiceConnection) -> PyResult<()> {
         self.connection = Some(connection);
         Ok(())
     }
-    
+
     /// Start playing audio from a file
     pub fn play_file(&mut self, file_path: String) -> PyResult<bool> {
         if self.connection.is_none() {
             return Ok(false);
         }
-        
+
         if let Some(conn) = &self.connection {
             if !conn.connected {
                 return Ok(false);
             }
         }
-        
+
         // In a real implementation, this would read the audio file and send
         // the audio data to the Discord voice connection
         self.playing = true;
         self.paused = false;
         Ok(true)
     }
-    
+
     /// Stop playing audio
     pub fn stop(&mut self) -> PyResult<()> {
         self.playing = false;
         self.paused = false;
         Ok(())
     }
-    
+
     /// Pause audio playback
     pub fn pause(&mut self) -> PyResult<()> {
         if self.playing {
@@ -576,7 +613,7 @@ impl AudioPlayer {
         }
         Ok(())
     }
-    
+
     /// Resume audio playback
     pub fn resume(&mut self) -> PyResult<()> {
         if self.playing && self.paused {
@@ -584,28 +621,30 @@ impl AudioPlayer {
         }
         Ok(())
     }
-    
+
     /// Set the volume (0.0 to 2.0)
     pub fn set_volume(&mut self, volume: f32) -> PyResult<()> {
         if volume < 0.0 || volume > 2.0 {
-            return Err(pyo3::exceptions::PyValueError::new_err("Volume must be between 0.0 and 2.0"));
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "Volume must be between 0.0 and 2.0",
+            ));
         }
         self.volume = volume;
         Ok(())
     }
-    
+
     /// Get the current playback status
     #[getter]
     pub fn is_playing(&self) -> bool {
         self.playing && !self.paused
     }
-    
+
     /// Get the current pause status
     #[getter]
     pub fn is_paused(&self) -> bool {
         self.playing && self.paused
     }
-    
+
     /// Get the current volume
     #[getter]
     pub fn volume(&self) -> f32 {
@@ -629,44 +668,41 @@ pub struct Guild {
 impl Guild {
     #[new]
     pub fn new(id: String, name: String, owner_id: String) -> Self {
-        Self {
-            id,
-            name,
-            owner_id,
-        }
+        Self { id, name, owner_id }
     }
-    
+
     pub fn __str__(&self) -> String {
         format!("<Guild id={} name={}>", self.id, self.name)
     }
-    
+
     pub fn __repr__(&self) -> String {
-        format!("Guild(id='{}', name='{}', owner_id='{}')",
-            self.id, self.name, self.owner_id)
+        format!(
+            "Guild(id='{}', name='{}', owner_id='{}')",
+            self.id, self.name, self.owner_id
+        )
     }
 }
 
 impl Guild {
     pub fn from_json(data: Value) -> Self {
-        let id = data.get("id")
+        let id = data
+            .get("id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let name = data.get("name")
+
+        let name = data
+            .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        let owner_id = data.get("owner_id")
+
+        let owner_id = data
+            .get("owner_id")
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-            
-        Self {
-            id,
-            name,
-            owner_id,
-        }
+
+        Self { id, name, owner_id }
     }
 }

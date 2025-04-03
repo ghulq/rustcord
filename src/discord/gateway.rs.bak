@@ -96,7 +96,7 @@ impl GatewayClient {
                     heartbeat_interval,
                     last_heartbeat_ack,
                 ).await {
-                    eprintln!("Gateway connection error: {}", e);
+                    eprintln!("Gateway connection error: {e}");
                 }
             });
             
@@ -109,14 +109,14 @@ impl GatewayClient {
         if let Some(tx) = &self.message_tx {
             let json_data: Value = Python::with_gil(|py| {
                 data.as_ref().extract()
-                    .map_err(|e| DiscordError::ParseError(format!("Failed to convert dict to JSON: {}", e)))
+                    .map_err(|e| DiscordError::ParseError(format!("Failed to convert dict to JSON: {e}")))
             })
             .map_err(|e: DiscordError| e.to_pyerr())?;
             
             let tx_clone = tx.clone();
             self.runtime.spawn(async move {
                 if let Err(e) = tx_clone.send(json_data).await {
-                    eprintln!("Failed to send message to gateway: {}", e);
+                    eprintln!("Failed to send message to gateway: {e}");
                 }
             });
         } else {
@@ -150,10 +150,10 @@ async fn gateway_connect(
     }
     
     let gateway_url = Url::parse(&gateway_url)
-        .map_err(|e| DiscordError::ParseError(format!("Invalid gateway URL: {}", e)))?;
+        .map_err(|e| DiscordError::ParseError(format!("Invalid gateway URL: {e}")))?;
     
     let (ws_stream, _) = connect_async(gateway_url).await
-        .map_err(|e| DiscordError::ConnectionError(format!("WebSocket connection failed: {}", e)))?;
+        .map_err(|e| DiscordError::ConnectionError(format!("WebSocket connection failed: {e}")))?;
     
     println!("Connected to Discord Gateway");
     
@@ -175,7 +175,7 @@ async fn gateway_connect(
                     let data: Value = match serde_json::from_str(&text) {
                         Ok(data) => data,
                         Err(e) => {
-                            eprintln!("Failed to parse gateway message: {}", e);
+                            eprintln!("Failed to parse gateway message: {e}");
                             continue;
                         }
                     };
@@ -229,7 +229,7 @@ async fn gateway_connect(
                                 // Clone ws_sender inside the task to avoid ownership issues
                                 let mut ws_stream = ws_stream_clone.lock().await;
                                 if let Err(e) = ws_stream.send(identify_msg).await {
-                                    eprintln!("Failed to send IDENTIFY: {}", e);
+                                    eprintln!("Failed to send IDENTIFY: {e}");
                                 }
                             }
                         },
@@ -256,13 +256,13 @@ async fn gateway_connect(
                                                 .and_then(|obj| obj.extract::<PyObject>()) {
                                                 Ok(d) => d,
                                                 Err(e) => {
-                                                    eprintln!("Failed to convert event data to Python: {}", e);
+                                                    eprintln!("Failed to convert event data to Python: {e}");
                                                     return;
                                                 }
                                             };
                                             
                                             if let Err(e) = callback.call1(py, (py_data,)) {
-                                                eprintln!("Error in event callback: {}", e);
+                                                eprintln!("Error in event callback: {e}");
                                             }
                                         }
                                     }
@@ -300,7 +300,7 @@ async fn gateway_connect(
                     break;
                 },
                 Err(e) => {
-                    eprintln!("WebSocket error: {}", e);
+                    eprintln!("WebSocket error: {e}");
                     break;
                 },
                 _ => {}
@@ -363,7 +363,7 @@ async fn gateway_connect(
                     
                     let heartbeat_msg = WsMessage::Text(heartbeat.to_string());
                     if let Err(e) = ws_sender2.lock().unwrap().send(heartbeat_msg).await {
-                        eprintln!("Failed to send heartbeat: {}", e);
+                        eprintln!("Failed to send heartbeat: {e}");
                         break;
                     }
                 }
@@ -376,13 +376,13 @@ async fn gateway_connect(
         let message_text = match serde_json::to_string(&message) {
             Ok(text) => text,
             Err(e) => {
-                eprintln!("Failed to serialize message: {}", e);
+                eprintln!("Failed to serialize message: {e}");
                 continue;
             }
         };
         
         if let Err(e) = ws_sender.lock().unwrap().send(WsMessage::Text(message_text)).await {
-            eprintln!("Failed to send message to gateway: {}", e);
+            eprintln!("Failed to send message to gateway: {e}");
             break;
         }
     }
