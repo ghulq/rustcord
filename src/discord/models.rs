@@ -77,10 +77,7 @@ impl VoiceState {
         format!(
             "<VoiceState user_id={} channel_id={}>",
             self.user_id,
-            match &self.channel_id {
-                Some(id) => id,
-                None => "None",
-            }
+            self.channel_id.as_deref().unwrap_or("None"),
         )
     }
 
