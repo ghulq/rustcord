@@ -134,10 +134,7 @@ impl GatewayClient {
             let last_heartbeat_ack = self.last_heartbeat_ack.clone();
             let intents = self.intents;
 
-            println!(
-                "Connecting with sharding: shard {}/{}",
-                shard_id, shard_count
-            );
+            println!("Connecting with sharding: shard {shard_id}/{shard_count}");
 
             // Start the WebSocket connection in a background task
             runtime.spawn(async move {
@@ -375,8 +372,7 @@ async fn process_gateway_messages(
                                         (shard_id, shard_count)
                                     {
                                         println!(
-                                            "Sending IDENTIFY with shard [{}]/[{}]",
-                                            shard_id, shard_count
+                                            "Sending IDENTIFY with shard [{shard_id}]/[{shard_count}]"
                                         );
                                         json!({
                                             "op": GATEWAY_OP_IDENTIFY,
@@ -442,7 +438,7 @@ async fn process_gateway_messages(
                                         let event_data = data["d"].clone();
                                         let py_data = match pyo3::Python::eval(
                                             py,
-                                            &format!("{}", event_data),
+                                            &format!("{event_data}"),
                                             None,
                                             None,
                                         )
@@ -494,12 +490,12 @@ async fn process_gateway_messages(
                     }
                     _ => {
                         // Unhandled operation code
-                        eprintln!("Unhandled gateway op: {}", op);
+                        eprintln!("Unhandled gateway op: {op}");
                     }
                 }
             }
             Ok(WsMessage::Close(frame)) => {
-                eprintln!("WebSocket closed: {:?}", frame);
+                eprintln!("WebSocket closed: {frame:?}");
                 break;
             }
             Err(e) => {

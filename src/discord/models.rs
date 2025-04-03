@@ -77,11 +77,11 @@ impl VoiceState {
             self.user_id,
             self.session_id,
             match &self.channel_id {
-                Some(id) => format!("'{}'", id),
+                Some(id) => format!("'{id}'"),
                 None => "None".to_string(),
             },
             match &self.guild_id {
-                Some(id) => format!("'{}'", id),
+                Some(id) => format!("'{id}'"),
                 None => "None".to_string(),
             }
         )
@@ -420,7 +420,7 @@ impl Channel {
             self.name,
             self.channel_type,
             match &self.guild_id {
-                Some(id) => format!("'{}'", id),
+                Some(id) => format!("'{id}'"),
                 None => "None".to_string(),
             }
         )
@@ -547,6 +547,7 @@ impl VoiceConnection {
 
 /// Audio player for Discord voice connections
 #[pyclass]
+#[derive(Default)]
 pub struct AudioPlayer {
     connection: Option<VoiceConnection>,
     playing: bool,
@@ -558,12 +559,7 @@ pub struct AudioPlayer {
 impl AudioPlayer {
     #[new]
     pub fn new() -> Self {
-        Self {
-            connection: None,
-            playing: false,
-            paused: false,
-            volume: 1.0,
-        }
+        Self::default()
     }
 
     pub fn __str__(&self) -> String {
@@ -623,7 +619,7 @@ impl AudioPlayer {
 
     /// Set the volume (0.0 to 2.0)
     pub fn set_volume(&mut self, volume: f32) -> PyResult<()> {
-        if volume < 0.0 || volume > 2.0 {
+        if !(0.0..=2.0).contains(&volume) {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "Volume must be between 0.0 and 2.0",
             ));

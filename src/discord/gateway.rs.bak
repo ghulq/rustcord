@@ -291,7 +291,7 @@ async fn gateway_connect(
                         },
                         _ => {
                             // Unhandled operation code
-                            eprintln!("Unhandled gateway op: {}", op);
+                            eprintln!("Unhandled gateway op: {op}");
                         }
                     }
                 },

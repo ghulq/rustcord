@@ -65,10 +65,7 @@ impl DiscordClient {
         py: Python,
     ) -> PyResult<Py<Message>> {
         let client = self.http_client.clone();
-        let url = format!(
-            "{}/v{}/channels/{}/messages",
-            API_BASE_URL, API_VERSION, channel_id
-        );
+        let url = format!("{API_BASE_URL}/v{API_VERSION}/channels/{channel_id}/messages");
         let data = json!({ "content": content });
 
         self.runtime
@@ -85,8 +82,7 @@ impl DiscordClient {
                         .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
                     return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {} - {}",
-                        status, error_text
+                        "Discord API error: {status} - {error_text}"
                     )));
                 }
 
@@ -103,7 +99,7 @@ impl DiscordClient {
     /// Get a channel by ID
     pub fn get_channel(&self, channel_id: String, py: Python) -> PyResult<Py<Channel>> {
         let client = self.http_client.clone();
-        let url = format!("{}/v{}/channels/{}", API_BASE_URL, API_VERSION, channel_id);
+        let url = format!("{API_BASE_URL}/v{API_VERSION}/channels/{channel_id}");
 
         self.runtime
             .block_on(async move {
@@ -119,8 +115,7 @@ impl DiscordClient {
                         .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
                     return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {} - {}",
-                        status, error_text
+                        "Discord API error: {status} - {error_text}"
                     )));
                 }
 
@@ -137,7 +132,7 @@ impl DiscordClient {
     /// Get the current bot user
     pub fn get_current_user(&self, py: Python) -> PyResult<Py<User>> {
         let client = self.http_client.clone();
-        let url = format!("{}/v{}/users/@me", API_BASE_URL, API_VERSION);
+        let url = format!("{API_BASE_URL}/v{API_VERSION}/users/@me");
 
         self.runtime
             .block_on(async move {
@@ -152,8 +147,7 @@ impl DiscordClient {
                         .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
                     return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {} - {}",
-                        status, error_text
+                        "Discord API error: {status} - {error_text}"
                     )));
                 }
 
@@ -170,7 +164,7 @@ impl DiscordClient {
     /// Get guilds for the current user
     pub fn get_current_user_guilds(&self, py: Python) -> PyResult<Vec<Py<Guild>>> {
         let client = self.http_client.clone();
-        let url = format!("{}/v{}/users/@me/guilds", API_BASE_URL, API_VERSION);
+        let url = format!("{API_BASE_URL}/v{API_VERSION}/users/@me/guilds");
 
         self.runtime
             .block_on(async move {
@@ -186,8 +180,7 @@ impl DiscordClient {
                         .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
                     return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {} - {}",
-                        status, error_text
+                        "Discord API error: {status} - {error_text}"
                     )));
                 }
 
@@ -215,7 +208,7 @@ impl DiscordClient {
     /// Get the gateway URL for websocket connections
     pub fn get_gateway_url(&self) -> PyResult<String> {
         let client = self.http_client.clone();
-        let url = format!("{}/v{}/gateway", API_BASE_URL, API_VERSION);
+        let url = format!("{API_BASE_URL}/v{API_VERSION}/gateway");
 
         self.runtime
             .block_on(async move {
@@ -230,8 +223,7 @@ impl DiscordClient {
                         .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
                     return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {} - {}",
-                        status, error_text
+                        "Discord API error: {status} - {error_text}"
                     )));
                 }
 
