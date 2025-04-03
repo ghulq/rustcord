@@ -32,7 +32,7 @@ pub struct VoiceState {
 #[pymethods]
 impl VoiceState {
     #[new]
-    pub fn new(
+    pub const fn new(
         user_id: String,
         session_id: String,
         guild_id: Option<String>,
@@ -172,7 +172,7 @@ pub struct VoiceServerInfo {
 #[pymethods]
 impl VoiceServerInfo {
     #[new]
-    pub fn new(token: String, guild_id: String, endpoint: String) -> Self {
+    pub const fn new(token: String, guild_id: String, endpoint: String) -> Self {
         Self {
             token,
             guild_id,
@@ -242,7 +242,7 @@ pub struct Message {
 #[pymethods]
 impl Message {
     #[new]
-    pub fn new(
+    pub const fn new(
         id: String,
         channel_id: String,
         content: String,
@@ -331,7 +331,7 @@ pub struct User {
 #[pymethods]
 impl User {
     #[new]
-    pub fn new(id: String, username: String, discriminator: String, bot: bool) -> Self {
+    pub const fn new(id: String, username: String, discriminator: String, bot: bool) -> Self {
         Self {
             id,
             username,
@@ -400,7 +400,7 @@ pub struct Channel {
 #[pymethods]
 impl Channel {
     #[new]
-    pub fn new(id: String, name: String, channel_type: u8, guild_id: Option<String>) -> Self {
+    pub const fn new(id: String, name: String, channel_type: u8, guild_id: Option<String>) -> Self {
         Self {
             id,
             name,
@@ -482,7 +482,7 @@ pub struct VoiceConnection {
 #[pymethods]
 impl VoiceConnection {
     #[new]
-    pub fn new(
+    pub const fn new(
         guild_id: String,
         channel_id: String,
         session_id: String,
@@ -630,19 +630,19 @@ impl AudioPlayer {
 
     /// Get the current playback status
     #[getter]
-    pub fn is_playing(&self) -> bool {
+    pub const fn is_playing(&self) -> bool {
         self.playing && !self.paused
     }
 
     /// Get the current pause status
     #[getter]
-    pub fn is_paused(&self) -> bool {
+    pub const fn is_paused(&self) -> bool {
         self.playing && self.paused
     }
 
     /// Get the current volume
     #[getter]
-    pub fn volume(&self) -> f32 {
+    pub const fn volume(&self) -> f32 {
         self.volume
     }
 }
@@ -662,7 +662,7 @@ pub struct Guild {
 #[pymethods]
 impl Guild {
     #[new]
-    pub fn new(id: String, name: String, owner_id: String) -> Self {
+    pub const fn new(id: String, name: String, owner_id: String) -> Self {
         Self { id, name, owner_id }
     }
 

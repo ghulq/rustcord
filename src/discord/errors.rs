@@ -57,7 +57,7 @@ pub struct DiscordErrorPy {
 #[pymethods]
 impl DiscordErrorPy {
     #[new]
-    pub fn new(message: String, error_type: String) -> Self {
+    pub const fn new(message: String, error_type: String) -> Self {
         Self {
             message,
             error_type,
