@@ -91,33 +91,7 @@ impl GatewayClient {
 
     /// Connect to the Discord Gateway
     pub fn connect(&mut self, gateway_url: String) -> PyResult<()> {
-        Python::with_gil(|_py| {
-            let (message_tx, message_rx) = mpsc::channel(100);
-            self.message_tx = Some(message_tx);
-
-            let token = self.token.clone();
-            let shared_cloned = self.shared.clone();
-            let intents = self.intents;
-
-            // Start the WebSocket connection in a background task
-            self.shared.runtime.spawn(async move {
-                if let Err(e) = gateway_connect(
-                    gateway_url,
-                    token,
-                    intents,
-                    None, // No shard_id
-                    None, // No shard_count
-                    shared_cloned,
-                    message_rx,
-                )
-                .await
-                {
-                    eprintln!("Gateway connection error: {e}");
-                }
-            });
-
-            Ok(())
-        })
+        self.connect_inner(gateway_url, None, None)
     }
 
     /// Connect to the Discord Gateway with sharding
@@ -127,6 +101,15 @@ impl GatewayClient {
         shard_id: usize,
         shard_count: usize,
     ) -> PyResult<()> {
+        self.connect_inner(gateway_url, Some(shard_id), Some(shard_count))
+    }
+
+    fn connect_inner(
+        &mut self,
+        gateway_url: String,
+        shard_id: Option<usize>,
+        shard_count: Option<usize>,
+    ) -> PyResult<()> {
         Python::with_gil(|_py| {
             let (message_tx, message_rx) = mpsc::channel(100);
             self.message_tx = Some(message_tx);
@@ -135,7 +118,7 @@ impl GatewayClient {
             let shared_cloned = self.shared.clone();
             let intents = self.intents;
 
-            println!("Connecting with sharding: shard {shard_id}/{shard_count}");
+            println!("Connecting with sharding: shard {shard_id:?}/{shard_count:?}");
 
             // Start the WebSocket connection in a background task
             self.shared.runtime.spawn(async move {
@@ -143,14 +126,16 @@ impl GatewayClient {
                     gateway_url,
                     token,
                     intents,
-                    Some(shard_id),
-                    Some(shard_count),
+                    shard_id,
+                    shard_count,
                     shared_cloned,
                     message_rx,
                 )
                 .await
                 {
-                    eprintln!("Gateway connection error for shard {shard_id}/{shard_count}: {e}");
+                    eprintln!(
+                        "Gateway connection error for shard {shard_id:?}/{shard_count:?}: {e}"
+                    );
                 }
             });
 
