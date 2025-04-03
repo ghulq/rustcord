@@ -27,17 +27,34 @@ const GATEWAY_OP_INVALID_SESSION: u8 = 9;
 const GATEWAY_OP_HELLO: u8 = 10;
 const GATEWAY_OP_HEARTBEAT_ACK: u8 = 11;
 
+struct SharedGatewayClient {
+    runtime: Runtime,
+    last_heartbeat_ack: Mutex<Instant>,
+    session_id: Mutex<Option<String>>,
+    sequence: Mutex<Option<u64>>,
+    event_callbacks: StdMutex<HashMap<String, PyObject>>,
+    heartbeat_interval: Mutex<Option<u64>>,
+}
+
+impl SharedGatewayClient {
+    fn new(runtime: Runtime) -> Self {
+        Self {
+            runtime,
+            last_heartbeat_ack: Mutex::new(Instant::now()),
+            session_id: Default::default(),
+            sequence: Default::default(),
+            event_callbacks: Default::default(),
+            heartbeat_interval: Default::default(),
+        }
+    }
+}
+
 /// Client for Discord Gateway WebSocket connections
 #[pyclass]
 pub struct GatewayClient {
     token: String,
-    session_id: Arc<Mutex<Option<String>>>,
-    sequence: Arc<Mutex<Option<u64>>>,
-    runtime: Arc<Runtime>,
-    event_callbacks: Arc<StdMutex<HashMap<String, PyObject>>>,
+    shared: Arc<SharedGatewayClient>,
     message_tx: Option<Sender<Value>>,
-    heartbeat_interval: Arc<Mutex<Option<u64>>>,
-    last_heartbeat_ack: Arc<Mutex<Instant>>,
     intents: u32,
 }
 
@@ -52,13 +69,8 @@ impl GatewayClient {
 
         Ok(Self {
             token,
-            session_id: Arc::default(),
-            sequence: Arc::default(),
-            runtime: Arc::new(runtime),
-            event_callbacks: Arc::default(),
+            shared: Arc::new(SharedGatewayClient::new(runtime)),
             message_tx: None,
-            heartbeat_interval: Arc::default(),
-            last_heartbeat_ack: Arc::new(Mutex::new(Instant::now())),
             intents,
         })
     }
@@ -66,6 +78,7 @@ impl GatewayClient {
     /// Register a callback for a specific gateway event
     pub fn on(&self, event_name: String, callback: PyObject) -> PyResult<()> {
         let mut callbacks = self
+            .shared
             .event_callbacks
             .lock()
             .map_err(|e| DiscordError::MutexError(e.to_string()).to_pyerr())?;
@@ -81,28 +94,19 @@ impl GatewayClient {
             self.message_tx = Some(message_tx);
 
             let token = self.token.clone();
-            let runtime = self.runtime.clone();
-            let session_id = self.session_id.clone();
-            let sequence = self.sequence.clone();
-            let event_callbacks = self.event_callbacks.clone();
-            let heartbeat_interval = self.heartbeat_interval.clone();
-            let last_heartbeat_ack = self.last_heartbeat_ack.clone();
+            let shared_cloned = self.shared.clone();
             let intents = self.intents;
 
             // Start the WebSocket connection in a background task
-            runtime.spawn(async move {
+            self.shared.runtime.spawn(async move {
                 if let Err(e) = gateway_connect(
                     gateway_url,
                     token,
                     intents,
                     None, // No shard_id
                     None, // No shard_count
-                    session_id,
-                    sequence,
-                    event_callbacks,
+                    shared_cloned,
                     message_rx,
-                    heartbeat_interval,
-                    last_heartbeat_ack,
                 )
                 .await
                 {
@@ -126,30 +130,21 @@ impl GatewayClient {
             self.message_tx = Some(message_tx);
 
             let token = self.token.clone();
-            let runtime = self.runtime.clone();
-            let session_id = self.session_id.clone();
-            let sequence = self.sequence.clone();
-            let event_callbacks = self.event_callbacks.clone();
-            let heartbeat_interval = self.heartbeat_interval.clone();
-            let last_heartbeat_ack = self.last_heartbeat_ack.clone();
+            let shared_cloned = self.shared.clone();
             let intents = self.intents;
 
             println!("Connecting with sharding: shard {shard_id}/{shard_count}");
 
             // Start the WebSocket connection in a background task
-            runtime.spawn(async move {
+            self.shared.runtime.spawn(async move {
                 if let Err(e) = gateway_connect(
                     gateway_url,
                     token,
                     intents,
                     Some(shard_id),
                     Some(shard_count),
-                    session_id,
-                    sequence,
-                    event_callbacks,
+                    shared_cloned,
                     message_rx,
-                    heartbeat_interval,
-                    last_heartbeat_ack,
                 )
                 .await
                 {
@@ -174,7 +169,7 @@ impl GatewayClient {
             })?;
 
             let tx_clone = tx.clone();
-            self.runtime.spawn(async move {
+            self.shared.runtime.spawn(async move {
                 if let Err(e) = tx_clone.send(json_data).await {
                     eprintln!("Failed to send message to gateway: {e}");
                 }
@@ -199,12 +194,8 @@ async fn gateway_connect(
     intents: u32,
     shard_id: Option<usize>,
     shard_count: Option<usize>,
-    session_id: Arc<Mutex<Option<String>>>,
-    sequence: Arc<Mutex<Option<u64>>>,
-    event_callbacks: Arc<StdMutex<HashMap<String, PyObject>>>,
+    shared: Arc<SharedGatewayClient>,
     mut message_rx: Receiver<Value>,
-    heartbeat_interval: Arc<Mutex<Option<u64>>>,
-    last_heartbeat_ack: Arc<Mutex<Instant>>,
 ) -> Result<(), DiscordError> {
     // Ensure the URL has the necessary parameters
     if !gateway_url.contains("?") {
@@ -232,10 +223,7 @@ async fn gateway_connect(
     // Clone variables for first task
     let ws_sender_clone1 = ws_sender.clone();
     let token_clone = token.clone();
-    let session_id_clone = session_id.clone();
-    let sequence_clone = sequence.clone();
-    let heartbeat_interval_clone = heartbeat_interval.clone();
-    let last_heartbeat_ack_clone = last_heartbeat_ack.clone();
+    let shared_cloned = shared.clone();
 
     // Handle incoming Gateway messages
     tokio::spawn(async move {
@@ -244,12 +232,8 @@ async fn gateway_connect(
             token_clone,
             intents,
             ws_sender_clone1,
-            session_id_clone,
-            sequence_clone,
-            event_callbacks,
+            shared_cloned,
             heartbeat_tx,
-            heartbeat_interval_clone,
-            last_heartbeat_ack_clone,
             shard_id,
             shard_count,
         )
@@ -258,20 +242,11 @@ async fn gateway_connect(
 
     // Clone variables for heartbeat task
     let ws_sender_clone2 = ws_sender.clone();
-    let heartbeat_interval_clone = heartbeat_interval.clone();
-    let sequence_clone = sequence.clone();
-    let last_heartbeat_ack_clone = last_heartbeat_ack.clone();
+    let shared_cloned2 = shared.clone();
 
     // Start heartbeat task
     tokio::spawn(async move {
-        handle_heartbeats(
-            heartbeat_rx,
-            ws_sender_clone2,
-            heartbeat_interval_clone,
-            sequence_clone,
-            last_heartbeat_ack_clone,
-        )
-        .await;
+        handle_heartbeats(heartbeat_rx, ws_sender_clone2, shared_cloned2).await;
     });
 
     // Forward outgoing messages from the channel to the WebSocket
@@ -314,12 +289,8 @@ async fn process_gateway_messages(
             >,
         >,
     >,
-    session_id: Arc<Mutex<Option<String>>>,
-    sequence: Arc<Mutex<Option<u64>>>,
-    event_callbacks: Arc<StdMutex<HashMap<String, PyObject>>>,
+    shared: Arc<SharedGatewayClient>,
     heartbeat_tx: mpsc::Sender<bool>,
-    heartbeat_interval: Arc<Mutex<Option<u64>>>,
-    last_heartbeat_ack: Arc<Mutex<Instant>>,
     shard_id: Option<usize>,
     shard_count: Option<usize>,
 ) {
@@ -342,20 +313,20 @@ async fn process_gateway_messages(
                     GATEWAY_OP_HELLO => {
                         // Extract heartbeat interval and start heartbeat task
                         if let Some(interval_ms) = data["d"]["heartbeat_interval"].as_u64() {
-                            let mut interval_guard = heartbeat_interval.lock().await;
+                            let mut interval_guard = shared.heartbeat_interval.lock().await;
                             *interval_guard = Some(interval_ms);
                             heartbeat_tx.send(true).await.ok();
 
                             // Send IDENTIFY to authenticate
                             let resume_possible = {
-                                let sid = session_id.lock().await;
-                                let seq = sequence.lock().await;
+                                let sid = shared.session_id.lock().await;
+                                let seq = shared.sequence.lock().await;
                                 sid.is_some() && seq.is_some()
                             };
 
                             let identify = if resume_possible {
-                                let sid = session_id.lock().await.clone().unwrap();
-                                let seq = sequence.lock().await.unwrap();
+                                let sid = shared.session_id.lock().await.clone().unwrap();
+                                let seq = shared.sequence.lock().await.unwrap();
 
                                 json!({
                                     "op": GATEWAY_OP_RESUME,
@@ -418,7 +389,7 @@ async fn process_gateway_messages(
                     GATEWAY_OP_DISPATCH => {
                         // Handle sequence number for resuming
                         if let Some(s) = data["s"].as_u64() {
-                            let mut seq_guard = sequence.lock().await;
+                            let mut seq_guard = shared.sequence.lock().await;
                             *seq_guard = Some(s);
                         }
 
@@ -426,14 +397,14 @@ async fn process_gateway_messages(
                         if let Some(t) = data["t"].as_str() {
                             if t == "READY" {
                                 if let Some(sid) = data["d"]["session_id"].as_str() {
-                                    let mut session_guard = session_id.lock().await;
+                                    let mut session_guard = shared.session_id.lock().await;
                                     *session_guard = Some(sid.to_string());
                                 }
                             }
 
                             // Call event handler
                             Python::with_gil(|py| {
-                                if let Ok(callbacks) = event_callbacks.lock() {
+                                if let Ok(callbacks) = shared.event_callbacks.lock() {
                                     if let Some(callback) = callbacks.get(t) {
                                         let event_data = data["d"].clone();
                                         let py_data = match pyo3::Python::eval(
@@ -469,11 +440,11 @@ async fn process_gateway_messages(
                     GATEWAY_OP_INVALID_SESSION => {
                         // Invalid session, clear session data
                         {
-                            let mut sid_guard = session_id.lock().await;
+                            let mut sid_guard = shared.session_id.lock().await;
                             *sid_guard = None;
                         }
                         {
-                            let mut seq_guard = sequence.lock().await;
+                            let mut seq_guard = shared.sequence.lock().await;
                             *seq_guard = None;
                         }
                         eprintln!("Invalid session");
@@ -485,7 +456,7 @@ async fn process_gateway_messages(
                     }
                     GATEWAY_OP_HEARTBEAT_ACK => {
                         // Update last heartbeat acknowledgement time
-                        let mut ack_guard = last_heartbeat_ack.lock().await;
+                        let mut ack_guard = shared.last_heartbeat_ack.lock().await;
                         *ack_guard = Instant::now();
                     }
                     _ => {
@@ -519,9 +490,7 @@ async fn handle_heartbeats(
             >,
         >,
     >,
-    heartbeat_interval: Arc<Mutex<Option<u64>>>,
-    sequence: Arc<Mutex<Option<u64>>>,
-    last_heartbeat_ack: Arc<Mutex<Instant>>,
+    shared: Arc<SharedGatewayClient>,
 ) {
     if heartbeat_rx.recv().await.is_some() {
         let mut interval_timer = interval(Duration::from_secs(1));
@@ -530,13 +499,13 @@ async fn handle_heartbeats(
             interval_timer.tick().await;
 
             // Get current heartbeat interval
-            let heartbeat_ms = match *heartbeat_interval.lock().await {
+            let heartbeat_ms = match *shared.heartbeat_interval.lock().await {
                 Some(ms) => ms,
                 None => continue,
             };
 
             // Check if we've received a heartbeat ACK recently
-            let last_ack = *last_heartbeat_ack.lock().await;
+            let last_ack = *shared.last_heartbeat_ack.lock().await;
             if last_ack.elapsed() > Duration::from_millis(heartbeat_ms * 2) {
                 eprintln!("Heartbeat ACK not received in time, closing connection");
                 break;
@@ -562,7 +531,7 @@ async fn handle_heartbeats(
 
             if send_heartbeat {
                 // Send heartbeat with current sequence number
-                let seq = *sequence.lock().await;
+                let seq = *shared.sequence.lock().await;
                 let heartbeat = json!({
                     "op": GATEWAY_OP_HEARTBEAT,
                     "d": seq
