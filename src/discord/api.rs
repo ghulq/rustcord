@@ -87,11 +87,11 @@ impl DiscordClient {
                     )));
                 }
 
-                let message_data = response.json().await.map_err(|e| {
+                let message_data: serde_json::Value = response.json().await.map_err(|e| {
                     DiscordError::ParseError(format!("Failed to parse message response: {e}"))
                 })?;
 
-                Ok(Message::from_json(message_data))
+                Ok(Message::from(message_data))
             })
             .map_err(|e: DiscordError| e.to_pyerr())
             .and_then(|msg| Py::new(py, msg))
@@ -120,14 +120,12 @@ impl DiscordClient {
                     )));
                 }
 
-                let channel_data = response.json().await.map_err(|e| {
+                response.json().await.map_err(|e| {
                     DiscordError::ParseError(format!("Failed to parse channel response: {e}"))
-                })?;
-
-                Ok(Channel::from_json(channel_data))
+                })
             })
             .map_err(|e: DiscordError| e.to_pyerr())
-            .and_then(|channel| Py::new(py, channel))
+            .and_then(|channel: Channel| Py::new(py, channel))
     }
 
     /// Get the current bot user
@@ -152,14 +150,12 @@ impl DiscordClient {
                     )));
                 }
 
-                let user_data = response.json().await.map_err(|e| {
+                response.json().await.map_err(|e| {
                     DiscordError::ParseError(format!("Failed to parse user response: {e}"))
-                })?;
-
-                Ok(User::from_json(user_data))
+                })
             })
             .map_err(|e: DiscordError| e.to_pyerr())
-            .and_then(|user| Py::new(py, user))
+            .and_then(|user: User| Py::new(py, user))
     }
 
     /// Get guilds for the current user
@@ -185,19 +181,12 @@ impl DiscordClient {
                     )));
                 }
 
-                let guilds_data: Vec<serde_json::Value> = response.json().await.map_err(|e| {
+                response.json().await.map_err(|e| {
                     DiscordError::ParseError(format!("Failed to parse guilds response: {e}"))
-                })?;
-
-                let mut result = Vec::with_capacity(guilds_data.len());
-                for guild_data in guilds_data {
-                    result.push(Guild::from_json(guild_data));
-                }
-
-                Ok(result)
+                })
             })
             .map_err(|e: DiscordError| e.to_pyerr())
-            .and_then(|guilds| {
+            .and_then(|guilds: Vec<Guild>| {
                 let mut py_guilds = Vec::with_capacity(guilds.len());
                 for guild in guilds {
                     py_guilds.push(Py::new(py, guild)?);

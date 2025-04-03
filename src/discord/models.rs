@@ -98,12 +98,6 @@ impl VoiceState {
     }
 }
 
-impl VoiceState {
-    pub fn from_json(data: Value) -> Self {
-        serde_json::from_value(data).unwrap()
-    }
-}
-
 /// Voice Server information from Discord
 #[pyclass]
 #[derive(Clone, Deserialize)]
@@ -142,12 +136,6 @@ impl VoiceServerInfo {
             "VoiceServerInfo(token='{}', guild_id='{}', endpoint='{}')",
             self.token, self.guild_id, self.endpoint
         )
-    }
-}
-
-impl VoiceServerInfo {
-    pub fn from_json(data: Value) -> Self {
-        serde_json::from_value(data).unwrap()
     }
 }
 
@@ -198,8 +186,8 @@ impl Message {
     }
 }
 
-impl Message {
-    pub fn from_json(data: Value) -> Self {
+impl From<Value> for Message {
+    fn from(data: Value) -> Self {
         let id = data
             .get("id")
             .and_then(|v| v.as_str())
@@ -284,12 +272,6 @@ impl User {
     }
 }
 
-impl User {
-    pub fn from_json(data: Value) -> Self {
-        serde_json::from_value(data).unwrap()
-    }
-}
-
 /// Discord Channel model
 #[pyclass]
 #[derive(Clone, Deserialize)]
@@ -335,12 +317,6 @@ impl Channel {
                 None => "None".to_string(),
             }
         )
-    }
-}
-
-impl Channel {
-    pub fn from_json(data: Value) -> Self {
-        serde_json::from_value(data).unwrap()
     }
 }
 
@@ -558,11 +534,5 @@ impl Guild {
             "Guild(id='{}', name='{}', owner_id='{}')",
             self.id, self.name, self.owner_id
         )
-    }
-}
-
-impl Guild {
-    pub fn from_json(data: Value) -> Self {
-        serde_json::from_value(data).unwrap()
     }
 }
