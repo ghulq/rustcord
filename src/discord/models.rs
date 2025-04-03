@@ -1,31 +1,44 @@
+use super::util;
 use pyo3::prelude::*;
+use serde::Deserialize;
 use serde_json::Value;
 
 /// Voice State model for Discord voice connections
 #[pyclass]
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct VoiceState {
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub guild_id: Option<String>,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub channel_id: Option<String>,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub user_id: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub session_id: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub deaf: bool,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub mute: bool,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub self_deaf: bool,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub self_mute: bool,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub self_stream: bool,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub self_video: bool,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub suppress: bool,
 }
 
@@ -90,82 +103,22 @@ impl VoiceState {
 
 impl VoiceState {
     pub fn from_json(data: Value) -> Self {
-        let guild_id = data
-            .get("guild_id")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-
-        let channel_id = data
-            .get("channel_id")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-
-        let user_id = data
-            .get("user_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let session_id = data
-            .get("session_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let deaf = data.get("deaf").and_then(|v| v.as_bool()).unwrap_or(false);
-
-        let mute = data.get("mute").and_then(|v| v.as_bool()).unwrap_or(false);
-
-        let self_deaf = data
-            .get("self_deaf")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-
-        let self_mute = data
-            .get("self_mute")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-
-        let self_stream = data
-            .get("self_stream")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-
-        let self_video = data
-            .get("self_video")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-
-        let suppress = data
-            .get("suppress")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-
-        Self {
-            guild_id,
-            channel_id,
-            user_id,
-            session_id,
-            deaf,
-            mute,
-            self_deaf,
-            self_mute,
-            self_stream,
-            self_video,
-            suppress,
-        }
+        serde_json::from_value(data).unwrap()
     }
 }
 
 /// Voice Server information from Discord
 #[pyclass]
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct VoiceServerInfo {
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub token: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub guild_id: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub endpoint: String,
 }
 
@@ -197,29 +150,7 @@ impl VoiceServerInfo {
 
 impl VoiceServerInfo {
     pub fn from_json(data: Value) -> Self {
-        let token = data
-            .get("token")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let guild_id = data
-            .get("guild_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let endpoint = data
-            .get("endpoint")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        Self {
-            token,
-            guild_id,
-            endpoint,
-        }
+        serde_json::from_value(data).unwrap()
     }
 }
 
@@ -316,15 +247,19 @@ impl Message {
 
 /// Discord User model
 #[pyclass]
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct User {
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub id: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub username: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub discriminator: String,
     #[pyo3(get)]
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
     pub bot: bool,
 }
 
@@ -354,32 +289,7 @@ impl User {
 
 impl User {
     pub fn from_json(data: Value) -> Self {
-        let id = data
-            .get("id")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let username = data
-            .get("username")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let discriminator = data
-            .get("discriminator")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-
-        let bot = data.get("bot").and_then(|v| v.as_bool()).unwrap_or(false);
-
-        Self {
-            id,
-            username,
-            discriminator,
-            bot,
-        }
+        serde_json::from_value(data).unwrap()
     }
 }
 
