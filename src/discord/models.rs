@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use serde_json::Value;
-use std::collections::HashMap;
 
 /// Voice State model for Discord voice connections
 #[pyclass]
@@ -581,7 +580,7 @@ impl AudioPlayer {
     }
 
     /// Start playing audio from a file
-    pub fn play_file(&mut self, file_path: String) -> PyResult<bool> {
+    pub fn play_file(&mut self, _file_path: String) -> PyResult<bool> {
         if self.connection.is_none() {
             return Ok(false);
         }

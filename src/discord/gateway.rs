@@ -168,7 +168,7 @@ impl GatewayClient {
     pub fn send(&self, data: &PyDict) -> PyResult<()> {
         if let Some(tx) = &self.message_tx {
             // Convert PyDict to JSON Value
-            let json_data = Python::with_gil(|py| -> PyResult<Value> {
+            let json_data = Python::with_gil(|_| -> PyResult<Value> {
                 let json_str = data.str()?.to_str()?;
                 serde_json::from_str(json_str).map_err(|e| {
                     DiscordError::ParseError(format!("Failed to convert dict to JSON: {e}"))
