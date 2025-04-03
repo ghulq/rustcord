@@ -1,0 +1,17 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include pyproject.toml
+include Cargo.toml
+include Cargo.lock
+
+# Include the compiled Rust library files
+include rustcord/*.so
+include rustcord/*.dll
+include rustcord/*.dylib
+
+# Include Rust source files
+recursive-include src *.rs
+
+# Include examples
+recursive-include examples *.py
