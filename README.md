@@ -38,7 +38,7 @@ This project is in active development. Currently:
 
 ## Installation
 
-### From PyPI (Not Available Yet)
+### From PyPI
 
 ```bash
 pip install rustcord
