@@ -203,33 +203,33 @@ impl Message {
         let id = data
             .get("id")
             .and_then(|v| v.as_str())
-            .unwrap_or("")
+            .unwrap_or_default()
             .to_string();
 
         let channel_id = data
             .get("channel_id")
             .and_then(|v| v.as_str())
-            .unwrap_or("")
+            .unwrap_or_default()
             .to_string();
 
         let content = data
             .get("content")
             .and_then(|v| v.as_str())
-            .unwrap_or("")
+            .unwrap_or_default()
             .to_string();
 
         let author_id = data
             .get("author")
             .and_then(|v| v.get("id"))
             .and_then(|v| v.as_str())
-            .unwrap_or("")
+            .unwrap_or_default()
             .to_string();
 
         let author_username = data
             .get("author")
             .and_then(|v| v.get("username"))
             .and_then(|v| v.as_str())
-            .unwrap_or("")
+            .unwrap_or_default()
             .to_string();
 
         Self {
