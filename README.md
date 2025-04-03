@@ -49,7 +49,7 @@ pip install rustcord
 Clone the repository and install in development mode:
 
 ```bash
-git clone https://github.com/user/rustcord.git
+git clone https://github.com/ghulq/rustcord.git
 cd rustcord
 pip install -e .
 ```
