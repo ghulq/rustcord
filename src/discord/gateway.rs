@@ -337,42 +337,30 @@ async fn process_gateway_messages(
                                     }
                                 })
                             } else {
-                                {
-                                    // Check if we're using sharding
-                                    if let (Some(shard_id), Some(shard_count)) =
-                                        (shard_id, shard_count)
-                                    {
-                                        println!(
-                                            "Sending IDENTIFY with shard [{shard_id}]/[{shard_count}]"
-                                        );
-                                        json!({
-                                            "op": GATEWAY_OP_IDENTIFY,
-                                            "d": {
-                                                "token": token,
-                                                "intents": intents,
-                                                "properties": {
-                                                    "$os": std::env::consts::OS,
-                                                    "$browser": "rustcord",
-                                                    "$device": "rustcord"
-                                                },
-                                                "shard": [shard_id, shard_count]
-                                            }
-                                        })
-                                    } else {
-                                        json!({
-                                            "op": GATEWAY_OP_IDENTIFY,
-                                            "d": {
-                                                "token": token,
-                                                "intents": intents,
-                                                "properties": {
-                                                    "$os": std::env::consts::OS,
-                                                    "$browser": "rustcord",
-                                                    "$device": "rustcord"
-                                                }
-                                            }
-                                        })
+                                let mut json = json!({
+                                    "op": GATEWAY_OP_IDENTIFY,
+                                    "d": {
+                                        "token": token,
+                                        "intents": intents,
+                                        "properties": {
+                                            "$os": std::env::consts::OS,
+                                            "$browser": "rustcord",
+                                            "$device": "rustcord"
+                                        }
                                     }
+                                });
+
+                                // Check if we're using sharding
+                                if let (Some(shard_id), Some(shard_count)) = (shard_id, shard_count)
+                                {
+                                    println!(
+                                        "Sending IDENTIFY with shard [{shard_id}]/[{shard_count}]"
+                                    );
+
+                                    json["d"]["shard"] = json!([shard_id, shard_count]);
                                 }
+
+                                json
                             };
 
                             let identify_msg = WsMessage::Text(identify.to_string());
