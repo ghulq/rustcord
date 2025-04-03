@@ -1,11 +1,12 @@
-use crate::discord::errors::DiscordError;
-use crate::discord::models::{Channel, Guild, Message, User};
-use crate::discord::{API_BASE_URL, API_VERSION};
+use crate::discord::{
+    API_BASE_URL, API_VERSION,
+    errors::DiscordError,
+    models::{Channel, Guild, Message, User},
+};
 use pyo3::prelude::*;
 use reqwest::{Client as ReqwestClient, header};
 use serde_json::json;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use tokio::runtime::Runtime;
 
 /// High-performance Rust client for Discord API interactions

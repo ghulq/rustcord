@@ -1,19 +1,21 @@
 use crate::discord::errors::DiscordError;
 use futures::{SinkExt, StreamExt};
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::{prelude::*, types::PyDict};
 use rand::Rng;
 use serde_json::{Value, json};
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::Mutex as StdMutex;
-use std::time::{Duration, Instant};
-use tokio::runtime::Runtime;
-use tokio::sync::{
-    Mutex,
-    mpsc::{self, Receiver, Sender},
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex as StdMutex},
+    time::{Duration, Instant},
 };
-use tokio::time::interval;
+use tokio::{
+    runtime::Runtime,
+    sync::{
+        Mutex,
+        mpsc::{self, Receiver, Sender},
+    },
+    time::interval,
+};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message as WsMessage};
 use url::Url;
 
