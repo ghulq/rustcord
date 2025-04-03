@@ -405,30 +405,26 @@ impl VoiceConnection {
     }
 
     /// Connect to the voice channel
-    pub fn connect(&mut self) -> PyResult<()> {
+    pub fn connect(&mut self) {
         // In a real implementation, this would establish a WebSocket connection
         // to the Discord voice server using the token and endpoint
         self.connected = true;
-        Ok(())
     }
 
     /// Disconnect from the voice channel
-    pub fn disconnect(&mut self) -> PyResult<()> {
+    pub fn disconnect(&mut self) {
         // In a real implementation, this would close the WebSocket connection
         self.connected = false;
-        Ok(())
     }
 
     /// Set self mute status
-    pub fn set_self_mute(&mut self, mute: bool) -> PyResult<()> {
+    pub fn set_self_mute(&mut self, mute: bool) {
         self.self_mute = mute;
-        Ok(())
     }
 
     /// Set self deaf status
-    pub fn set_self_deaf(&mut self, deaf: bool) -> PyResult<()> {
+    pub fn set_self_deaf(&mut self, deaf: bool) {
         self.self_deaf = deaf;
-        Ok(())
     }
 }
 
@@ -457,20 +453,19 @@ impl AudioPlayer {
     }
 
     /// Attach to a voice connection
-    pub fn attach(&mut self, connection: VoiceConnection) -> PyResult<()> {
+    pub fn attach(&mut self, connection: VoiceConnection) {
         self.connection = Some(connection);
-        Ok(())
     }
 
     /// Start playing audio from a file
-    pub fn play_file(&mut self, _file_path: String) -> PyResult<bool> {
+    pub fn play_file(&mut self, _file_path: String) -> bool {
         if self.connection.is_none() {
-            return Ok(false);
+            return false;
         }
 
         if let Some(conn) = &self.connection {
             if !conn.connected {
-                return Ok(false);
+                return false;
             }
         }
 
@@ -478,30 +473,28 @@ impl AudioPlayer {
         // the audio data to the Discord voice connection
         self.playing = true;
         self.paused = false;
-        Ok(true)
+
+        true
     }
 
     /// Stop playing audio
-    pub fn stop(&mut self) -> PyResult<()> {
+    pub fn stop(&mut self) {
         self.playing = false;
         self.paused = false;
-        Ok(())
     }
 
     /// Pause audio playback
-    pub fn pause(&mut self) -> PyResult<()> {
+    pub fn pause(&mut self) {
         if self.playing {
             self.paused = true;
         }
-        Ok(())
     }
 
     /// Resume audio playback
-    pub fn resume(&mut self) -> PyResult<()> {
+    pub fn resume(&mut self) {
         if self.playing && self.paused {
             self.paused = false;
         }
-        Ok(())
     }
 
     /// Set the volume (0.0 to 2.0)
