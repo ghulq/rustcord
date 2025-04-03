@@ -1,8 +1,4 @@
-use pyo3::{
-    PyErr,
-    exceptions::{PyConnectionError, PyRuntimeError, PyValueError},
-    prelude::*,
-};
+use pyo3::{PyErr, exceptions::PyRuntimeError, prelude::*};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -35,14 +31,14 @@ pub enum DiscordError {
 impl DiscordError {
     pub fn to_pyerr(&self) -> PyErr {
         match self {
-            Self::ApiError(msg) => PyRuntimeError::new_err(msg.clone()),
-            Self::InvalidToken(msg) => PyValueError::new_err(msg.clone()),
-            Self::HttpClientError(msg) => PyRuntimeError::new_err(msg.clone()),
-            Self::RuntimeError(msg) => PyRuntimeError::new_err(msg.clone()),
-            Self::ParseError(msg) => PyValueError::new_err(msg.clone()),
-            Self::ConnectionError(msg) => PyConnectionError::new_err(msg.clone()),
-            Self::NotConnected(msg) => PyRuntimeError::new_err(msg.clone()),
-            Self::MutexError(msg) => PyRuntimeError::new_err(msg.clone()),
+            Self::ApiError(msg)
+            | Self::InvalidToken(msg)
+            | Self::HttpClientError(msg)
+            | Self::RuntimeError(msg)
+            | Self::ParseError(msg)
+            | Self::ConnectionError(msg)
+            | Self::NotConnected(msg)
+            | Self::MutexError(msg) => PyRuntimeError::new_err(msg.clone()),
         }
     }
 }

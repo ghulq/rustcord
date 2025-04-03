@@ -43,10 +43,10 @@ impl SharedGatewayClient {
         Self {
             runtime,
             last_heartbeat_ack: Mutex::new(Instant::now()),
-            session_id: Default::default(),
-            sequence: Default::default(),
-            event_callbacks: Default::default(),
-            heartbeat_interval: Default::default(),
+            session_id: Mutex::default(),
+            sequence: Mutex::default(),
+            event_callbacks: StdMutex::default(),
+            heartbeat_interval: Mutex::default(),
         }
     }
 }
@@ -169,9 +169,8 @@ impl GatewayClient {
     }
 
     /// Disconnect from the gateway
-    pub fn disconnect(&mut self) -> PyResult<()> {
+    pub fn disconnect(&mut self) {
         self.message_tx = None;
-        Ok(())
     }
 }
 
@@ -185,7 +184,7 @@ async fn gateway_connect(
     mut message_rx: Receiver<Value>,
 ) -> Result<(), DiscordError> {
     // Ensure the URL has the necessary parameters
-    if !gateway_url.contains("?") {
+    if !gateway_url.contains('?') {
         gateway_url.push_str("?v=10&encoding=json");
     }
 
@@ -474,9 +473,8 @@ async fn handle_heartbeats(
             interval_timer.tick().await;
 
             // Get current heartbeat interval
-            let heartbeat_ms = match *shared.heartbeat_interval.lock().await {
-                Some(ms) => ms,
-                None => continue,
+            let Some(heartbeat_ms) = *shared.heartbeat_interval.lock().await else {
+                continue;
             };
 
             // Check if we've received a heartbeat ACK recently

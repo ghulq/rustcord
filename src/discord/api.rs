@@ -235,7 +235,7 @@ impl DiscordClient {
                 gateway_data
                     .get("url")
                     .and_then(|url| url.as_str())
-                    .map(|url| url.to_string())
+                    .map(ToString::to_string)
                     .ok_or_else(|| {
                         DiscordError::ParseError("Gateway URL not found in response".to_string())
                     })
