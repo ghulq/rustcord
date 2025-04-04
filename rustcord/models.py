@@ -124,7 +124,7 @@ class DiscordModel:
     """Base class for Discord data models"""
 
     _rust_type: ClassVar[Type] = None
-    __slots__ = ('_rust_type',)
+    __slots__ = ()
 
     @classmethod
     def _from_rust(cls, rust_obj):
@@ -136,7 +136,7 @@ class Message(DiscordModel):
     """Discord Message model"""
 
     _rust_type = _rust.Message
-    __slots__ = ('_rust_type', '_rust_obj')
+    __slots__ = ('_rust_obj',)
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -174,7 +174,7 @@ class User(DiscordModel):
     """Discord User model"""
 
     _rust_type = _rust.User
-    __slots__ = ('_rust_type', '_rust_obj')
+    __slots__ = ('_rust_obj',)
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -212,7 +212,7 @@ class Channel(DiscordModel):
     """Discord Channel model"""
 
     _rust_type = _rust.Channel
-    __slots__ = ('_rust_type', '_rust_obj')
+    __slots__ = ('_rust_obj',)
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -245,7 +245,7 @@ class Guild(DiscordModel):
     """Discord Guild model"""
 
     _rust_type = _rust.Guild
-    __slots__ = ('_rust_type', '_rust_obj')
+    __slots__ = ('_rust_obj',)
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -273,7 +273,7 @@ class VoiceState(DiscordModel):
     """Discord Voice State model"""
 
     _rust_type = getattr(_rust, 'VoiceState', None)
-    __slots__ = ('_rust_type', '_rust_obj', '_data')
+    __slots__ = ('_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
@@ -370,7 +370,7 @@ class VoiceServerInfo(DiscordModel):
     """Discord Voice Server Information"""
 
     _rust_type = getattr(_rust, 'VoiceServerInfo', None)
-    __slots__ = ('_rust_type', '_rust_obj', '_data')
+    __slots__ = ('_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
@@ -411,7 +411,7 @@ class VoiceConnection(DiscordModel):
     """Discord Voice Connection"""
 
     _rust_type = getattr(_rust, 'VoiceConnection', None)
-    __slots__ = ('_rust_type', '_rust_obj', '_data')
+    __slots__ = ('_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
@@ -519,7 +519,7 @@ class AudioPlayer(DiscordModel):
     """Discord Audio Player"""
 
     _rust_type = getattr(_rust, 'AudioPlayer', None)
-    __slots__ = ('_rust_type', '_rust_obj', '_data')
+    __slots__ = ('_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
