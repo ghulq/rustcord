@@ -9,13 +9,13 @@ where
     Ok(T::deserialize(deserializer).unwrap_or_default())
 }
 
-macro_rules! auto_py_constructor {
+macro_rules! py_getter_class {
     (
         $(#[$struct_meta:meta])*
         $struct_vis:vis struct $struct_name:ident {
             $(
                 $(#[$struct_attr_meta:meta])*
-                $struct_attr_vis:vis $struct_attr_name:ident: $struct_attr_ty:ty,
+                pub $struct_attr_name:ident: $struct_attr_ty:ty,
             )*
         }
 
@@ -30,7 +30,8 @@ macro_rules! auto_py_constructor {
         $struct_vis struct $struct_name {
             $(
                 $(#[$struct_attr_meta])*
-                $struct_attr_vis $struct_attr_name: $struct_attr_ty,
+                #[pyo3(get)]
+                pub $struct_attr_name: $struct_attr_ty,
             )*
         }
 
@@ -49,4 +50,4 @@ macro_rules! auto_py_constructor {
     };
 }
 
-pub(crate) use auto_py_constructor;
+pub(crate) use py_getter_class;

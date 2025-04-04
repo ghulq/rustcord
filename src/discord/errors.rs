@@ -1,5 +1,5 @@
-use pyo3::{PyErr, exceptions::PyRuntimeError, prelude::*};
 use super::util;
+use pyo3::{PyErr, exceptions::PyRuntimeError, prelude::*};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -44,13 +44,11 @@ impl DiscordError {
     }
 }
 
-util::auto_py_constructor! {
+util::py_getter_class! {
     /// Python-exposed Discord API error type
     #[pyclass]
     pub struct DiscordErrorPy {
-        #[pyo3(get)]
         pub message: String,
-        #[pyo3(get)]
         pub error_type: String,
     }
 

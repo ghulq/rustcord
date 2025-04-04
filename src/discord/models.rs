@@ -6,42 +6,31 @@ use serde::{
 };
 use std::fmt;
 
-util::auto_py_constructor! {
+util::py_getter_class! {
     /// Voice State model for Discord voice connections
     #[pyclass]
     #[derive(Clone, Deserialize)]
     pub struct VoiceState {
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub user_id: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub session_id: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub guild_id: Option<String>,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub channel_id: Option<String>,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub deaf: bool,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub mute: bool,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub self_deaf: bool,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub self_mute: bool,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub self_stream: bool,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub self_video: bool,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub suppress: bool,
     }
@@ -74,18 +63,15 @@ util::auto_py_constructor! {
     }
 }
 
-util::auto_py_constructor! {
+util::py_getter_class! {
     /// Voice Server information from Discord
     #[pyclass]
     #[derive(Clone, Deserialize)]
     pub struct VoiceServerInfo {
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub token: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub guild_id: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub endpoint: String,
     }
@@ -108,20 +94,15 @@ util::auto_py_constructor! {
     }
 }
 
-util::auto_py_constructor! {
+util::py_getter_class! {
     /// Discord Message model
     #[pyclass]
     #[derive(Clone, Default)]
     pub struct Message {
-        #[pyo3(get)]
         pub id: String,
-        #[pyo3(get)]
         pub channel_id: String,
-        #[pyo3(get)]
         pub content: String,
-        #[pyo3(get)]
         pub author_id: String,
-        #[pyo3(get)]
         pub author_username: String,
     }
 
@@ -206,21 +187,17 @@ impl<'de> Visitor<'de> for MessageVisitor {
     }
 }
 
-util::auto_py_constructor! {
+util::py_getter_class! {
     /// Discord User model
     #[pyclass]
     #[derive(Clone, Deserialize)]
     pub struct User {
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub id: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub username: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub discriminator: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub bot: bool,
     }
@@ -240,21 +217,17 @@ util::auto_py_constructor! {
     }
 }
 
-util::auto_py_constructor! {
+util::py_getter_class! {
     /// Discord Channel model
     #[pyclass]
     #[derive(Clone, Deserialize)]
     pub struct Channel {
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub id: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub name: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub channel_type: u8,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub guild_id: Option<String>,
     }
@@ -463,18 +436,15 @@ impl AudioPlayer {
     }
 }
 
-util::auto_py_constructor! {
+util::py_getter_class! {
     /// Discord Guild (Server) model
     #[pyclass]
     #[derive(Clone, Deserialize)]
     pub struct Guild {
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub id: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub name: String,
-        #[pyo3(get)]
         #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub owner_id: String,
     }
