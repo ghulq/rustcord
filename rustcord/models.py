@@ -6,6 +6,7 @@ import os
 from enum import IntEnum
 from typing import Optional, Any, ClassVar, Type, TypeVar, Union
 
+
 from . import _rust
 
 T = TypeVar('T')
@@ -97,7 +98,7 @@ class DiscordModel:
     def _from_rust(cls, rust_obj):
         """Convert a Rust object to a Python model"""
         if rust_obj is None:
-            return None
+            return
         return cls(_rust_obj=rust_obj)
 
 
@@ -935,7 +936,6 @@ class Interaction:
         for option in self.options:
             if option.get('name') == name:
                 return option
-        return None
 
     def get_option_value(self, name: str, default: Any = None) -> Any:
         """
@@ -959,7 +959,6 @@ class Interaction:
             return self.member.get('user', {}).get('id')
         if self.user:
             return self.user.get('id')
-        return None
 
     @property
     def username(self) -> Optional[str]:
@@ -968,7 +967,6 @@ class Interaction:
             return self.member.get('user', {}).get('username')
         if self.user:
             return self.user.get('username')
-        return None
 
     async def respond(
         self,

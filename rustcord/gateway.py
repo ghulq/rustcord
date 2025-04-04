@@ -5,12 +5,8 @@ Discord Gateway (WebSocket) connection handling
 import asyncio
 import logging
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    Union,
-    Awaitable,
-)
+from typing import Any, Union
+from collections.abc import Awaitable, Callable
 
 from . import _rust
 

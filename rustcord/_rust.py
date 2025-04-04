@@ -12,7 +12,8 @@ import random
 import time
 import sys
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any, Optional
+from collections.abc import Callable
 
 # Set up logging first
 __version__ = '0.1.2-py'
@@ -286,7 +287,7 @@ class DiscordClient:
         user = await self.get_current_user()
         if not user:
             logger.error('Failed to get current user to determine application ID')
-            return None
+            return
 
         # Try to fetch from the API
         try:
@@ -1132,14 +1133,12 @@ class GatewayClient:
         logger.warning(
             'Voice connections are not fully implemented in the Python version'
         )
-        return None
 
     async def create_audio_player(self):
         """Create an audio player for voice playback"""
         # In this Python implementation we don't have a full audio implementation
         # This would be properly implemented in the Rust version
         logger.warning('Audio players are not fully implemented in the Python version')
-        return None
 
     async def disconnect(self):
         """Disconnect from the Gateway"""

@@ -9,10 +9,9 @@ from enum import IntFlag
 from typing import (
     Any,
     Optional,
-    Callable,
-    Awaitable,
     TYPE_CHECKING,
 )
+from collections.abc import Awaitable, Callable
 
 from . import _rust
 from .models import (
@@ -271,13 +270,11 @@ class Client:
             return Channel(_rust_obj=channel)
         except Exception as e:
             logger.error(f'Failed to get channel {channel_id}: {e}')
-            return None
 
     async def get_guild(self, guild_id: str) -> Optional[Guild]:
         """Get a guild by ID"""
         # Will be implemented when we have the Rust backend
         logger.warning('get_guild method is not yet fully implemented')
-        return None
 
     async def get_current_user(self) -> Optional[User]:
         """Get the current bot user"""
@@ -286,7 +283,6 @@ class Client:
             return User(_rust_obj=user)
         except Exception as e:
             logger.error(f'Failed to get current user: {e}')
-            return None
 
     async def get_current_guilds(self) -> list[Guild]:
         """Get guilds for the current user"""
@@ -383,7 +379,6 @@ class Client:
                 return Message(_rust_obj=message)
         except Exception as e:
             logger.error(f'Failed to send message to channel {channel_id}: {e}')
-            return None
 
     async def register_global_command(
         self, command: ApplicationCommand
@@ -403,7 +398,6 @@ class Client:
             return result
         except Exception as e:
             logger.error(f'Failed to register global command {command.name}: {e}')
-            return None
 
     async def register_guild_command(
         self, guild_id: str, command: ApplicationCommand
@@ -428,7 +422,6 @@ class Client:
             logger.error(
                 f'Failed to register guild command {command.name} for guild {guild_id}: {e}'
             )
-            return None
 
     async def get_application_id(self) -> Optional[str]:
         """Get the application ID for this bot"""
@@ -436,7 +429,6 @@ class Client:
             return await self.rest_client.get_application_id()
         except Exception as e:
             logger.error(f'Failed to get application ID: {e}')
-            return None
 
     def command(
         self,

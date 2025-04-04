@@ -2,9 +2,7 @@
 RustCord: High-performance Discord API library with Rust core
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional, List, Callable, Union, TypeVar, Generic
 
 from . import _rust
 from .client import Client, Intents

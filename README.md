@@ -140,7 +140,7 @@ if __name__ == "__main__":
 ```python
 import asyncio
 import os
-from typing import Dict, Any
+from typing import Any
 from rustcord import Client, Intents
 from rustcord.embeds import Embed, Color
 
