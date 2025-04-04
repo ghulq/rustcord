@@ -16,7 +16,7 @@ from typing import Any, Optional
 from collections.abc import Callable
 
 # Set up logging first
-__version__ = '0.1.2-py'
+__version__ = '0.1.3-py'
 logger = logging.getLogger(__name__)
 
 # Import required libraries
@@ -150,7 +150,7 @@ class DiscordClient:
         self.api_base = 'https://discord.com/api/v10'
         self.headers = {
             'Authorization': f'Bot {self.token}',
-            'User-Agent': 'RustCord/0.1.2',
+            'User-Agent': 'RustCord/0.1.3',
             'Content-Type': 'application/json',
         }
         self.session = None

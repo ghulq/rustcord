@@ -114,7 +114,7 @@ impl DiscordClient {
 
         headers.insert(
             header::USER_AGENT,
-            header::HeaderValue::from_static("RustCord (https://github.com/user/rustcord, 0.1.2)"),
+            header::HeaderValue::from_static("RustCord (https://github.com/user/rustcord, 0.1.3)"),
         );
 
         let http_client = ReqwestClient::builder()
