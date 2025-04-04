@@ -1,4 +1,4 @@
-use crate::discord::{
+use super::{
     errors::DiscordError,
     gateway::GatewayData,
     models::{Channel, Guild, Message, User},
