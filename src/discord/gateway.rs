@@ -30,6 +30,7 @@ const GATEWAY_OP_HELLO: u8 = 10;
 const GATEWAY_OP_HEARTBEAT_ACK: u8 = 11;
 
 struct SharedGatewayClient {
+    token: String,
     runtime: Runtime,
     last_heartbeat_ack: Mutex<Instant>,
     session_id: Mutex<Option<String>>,
@@ -39,8 +40,9 @@ struct SharedGatewayClient {
 }
 
 impl SharedGatewayClient {
-    fn new(runtime: Runtime) -> Self {
+    fn new(token: String, runtime: Runtime) -> Self {
         Self {
+            token,
             runtime,
             last_heartbeat_ack: Mutex::new(Instant::now()),
             session_id: Mutex::default(),
@@ -54,7 +56,6 @@ impl SharedGatewayClient {
 /// Client for Discord Gateway WebSocket connections
 #[pyclass]
 pub struct GatewayClient {
-    token: String,
     shared: Arc<SharedGatewayClient>,
     message_tx: Option<Sender<Value>>,
     intents: u32,
@@ -70,8 +71,7 @@ impl GatewayClient {
             Runtime::new().map_err(|e| DiscordError::RuntimeError(e.to_string()).to_pyerr())?;
 
         Ok(Self {
-            token,
-            shared: Arc::new(SharedGatewayClient::new(runtime)),
+            shared: Arc::new(SharedGatewayClient::new(token, runtime)),
             message_tx: None,
             intents,
         })
@@ -114,7 +114,6 @@ impl GatewayClient {
             let (message_tx, message_rx) = mpsc::channel(100);
             self.message_tx = Some(message_tx);
 
-            let token = self.token.clone();
             let shared_cloned = self.shared.clone();
             let intents = self.intents;
 
@@ -124,7 +123,6 @@ impl GatewayClient {
             self.shared.runtime.spawn(async move {
                 if let Err(e) = gateway_connect(
                     gateway_url,
-                    token,
                     intents,
                     shard_id,
                     shard_count,
@@ -176,7 +174,6 @@ impl GatewayClient {
 
 async fn gateway_connect(
     mut gateway_url: String,
-    token: String,
     intents: u32,
     shard_id: Option<usize>,
     shard_count: Option<usize>,
@@ -208,14 +205,12 @@ async fn gateway_connect(
 
     // Clone variables for first task
     let ws_sender_clone1 = ws_sender.clone();
-    let token_clone = token.clone();
     let shared_cloned = shared.clone();
 
     // Handle incoming Gateway messages
     tokio::spawn(async move {
         process_gateway_messages(
             &mut ws_receiver,
-            token_clone,
             intents,
             ws_sender_clone1,
             shared_cloned,
@@ -263,7 +258,6 @@ async fn process_gateway_messages(
             tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
         >,
     >,
-    token: String,
     intents: u32,
     ws_sender: Arc<
         Mutex<
@@ -317,7 +311,7 @@ async fn process_gateway_messages(
                                 json!({
                                     "op": GATEWAY_OP_RESUME,
                                     "d": {
-                                        "token": token,
+                                        "token": shared.token,
                                         "session_id": sid,
                                         "seq": seq
                                     }
@@ -326,7 +320,7 @@ async fn process_gateway_messages(
                                 let mut json = json!({
                                     "op": GATEWAY_OP_IDENTIFY,
                                     "d": {
-                                        "token": token,
+                                        "token": shared.token,
                                         "intents": intents,
                                         "properties": {
                                             "$os": std::env::consts::OS,
