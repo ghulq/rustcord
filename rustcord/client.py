@@ -88,6 +88,7 @@ class Client:
         '_ready',
         '_command_registrations',
         '_is_sharded',
+        '_autocomplete_handlers',
     )
 
     def __init__(
