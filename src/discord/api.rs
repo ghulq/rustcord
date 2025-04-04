@@ -1,5 +1,6 @@
 use crate::discord::{
     errors::DiscordError,
+    gateway::GatewayData,
     models::{Channel, Guild, Message, User},
     url,
 };
@@ -165,16 +166,12 @@ impl DiscordClient {
 
     /// Get the gateway URL for websocket connections
     pub fn get_gateway_url(&self) -> PyResult<String> {
-        self.request::<serde_json::Value>(Method::GET, url!("/gateway"), Default::default())
-            .and_then(|gateway_data| {
-                gateway_data
-                    .get("url")
-                    .and_then(|url| url.as_str())
-                    .map(ToString::to_string)
-                    .ok_or_else(|| {
-                        DiscordError::ParseError("Gateway URL not found in response".to_string())
-                            .to_pyerr()
-                    })
+        self.request(Method::GET, url!("/gateway"), Default::default())
+            .and_then(|gateway_data: GatewayData| {
+                gateway_data.url.ok_or_else(|| {
+                    DiscordError::ParseError("Gateway URL not found in response".to_string())
+                        .to_pyerr()
+                })
             })
     }
 }

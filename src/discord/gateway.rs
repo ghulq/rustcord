@@ -1,7 +1,8 @@
-use crate::discord::errors::DiscordError;
+use super::{errors::DiscordError, util};
 use futures::{SinkExt, StreamExt};
 use pyo3::{prelude::*, types::PyDict};
 use rand::Rng;
+use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
@@ -28,6 +29,12 @@ const GATEWAY_OP_RECONNECT: u8 = 7;
 const GATEWAY_OP_INVALID_SESSION: u8 = 9;
 const GATEWAY_OP_HELLO: u8 = 10;
 const GATEWAY_OP_HEARTBEAT_ACK: u8 = 11;
+
+#[derive(Deserialize)]
+pub(crate) struct GatewayData {
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+    pub(crate) url: Option<String>,
+}
 
 struct SharedGatewayClient {
     token: String,
