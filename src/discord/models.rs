@@ -1,7 +1,11 @@
+use std::fmt;
+
 use super::util;
 use pyo3::prelude::*;
-use serde::Deserialize;
-use serde_json::Value;
+use serde::{
+    Deserialize, Deserializer,
+    de::{MapAccess, Visitor},
+};
 
 /// Voice State model for Discord voice connections
 #[pyclass]
@@ -141,7 +145,7 @@ impl VoiceServerInfo {
 
 /// Discord Message model
 #[pyclass]
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Message {
     #[pyo3(get)]
     pub id: String,
@@ -186,47 +190,69 @@ impl Message {
     }
 }
 
-impl From<Value> for Message {
-    fn from(data: Value) -> Self {
-        let id = data
-            .get("id")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
+impl<'de> Deserialize<'de> for Message {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_map(MessageVisitor)
+    }
+}
 
-        let channel_id = data
-            .get("channel_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
+#[derive(Deserialize)]
+struct MessageAuthorIntermediate {
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+    id: String,
 
-        let content = data
-            .get("content")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
+    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+    username: String,
+}
 
-        let author_id = data
-            .get("author")
-            .and_then(|v| v.get("id"))
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
+struct MessageVisitor;
 
-        let author_username = data
-            .get("author")
-            .and_then(|v| v.get("username"))
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
+impl<'de> Visitor<'de> for MessageVisitor {
+    type Value = Message;
 
-        Self {
-            id,
-            channel_id,
-            content,
-            author_id,
-            author_username,
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a map representing a Message")
+    }
+
+    fn visit_map<M>(self, mut map: M) -> Result<Message, M::Error>
+    where
+        M: MapAccess<'de>,
+    {
+        let mut message = Message::default();
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "id" => {
+                    if let Ok(Some(new_id)) = map.next_value::<Option<String>>() {
+                        message.id = new_id;
+                    }
+                }
+                "channel_id" => {
+                    if let Ok(Some(new_channel_id)) = map.next_value::<Option<String>>() {
+                        message.channel_id = new_channel_id;
+                    }
+                }
+                "content" => {
+                    if let Ok(Some(new_content)) = map.next_value::<Option<String>>() {
+                        message.content = new_content;
+                    }
+                }
+                "author" => {
+                    if let Ok(Some(a)) = map.next_value::<Option<MessageAuthorIntermediate>>() {
+                        message.author_id = a.id;
+                        message.author_username = a.username;
+                    }
+                }
+                _ => {
+                    let _ = map.next_value::<serde::de::IgnoredAny>()?;
+                }
+            }
         }
+
+        Ok(message)
     }
 }
 

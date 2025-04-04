@@ -3,8 +3,9 @@ use crate::discord::{
     models::{Channel, Guild, Message, User},
     url,
 };
-use pyo3::prelude::*;
-use reqwest::{Client as ReqwestClient, header};
+use pyo3::{PyClass, prelude::*};
+use reqwest::{Client as ReqwestClient, Method, header};
+use serde::{Serialize, de::DeserializeOwned};
 use serde_json::json;
 use std::{sync::Arc, time::Duration};
 use tokio::runtime::Runtime;
@@ -12,9 +13,82 @@ use tokio::runtime::Runtime;
 /// High-performance Rust client for Discord API interactions
 #[pyclass]
 pub struct DiscordClient {
-    token: String,
     http_client: ReqwestClient,
     runtime: Arc<Runtime>,
+}
+
+impl DiscordClient {
+    fn request<T>(&self, method: Method, url: String, data: Vec<u8>) -> PyResult<T>
+    where
+        T: DeserializeOwned,
+    {
+        let client = self.http_client.clone();
+
+        self.runtime
+            .block_on(async move {
+                let response = client
+                    .request(method.clone(), url.clone())
+                    .body(data)
+                    .send()
+                    .await
+                    .map_err(|e| {
+                        DiscordError::ApiError(format!(
+                            "[{method} {url}] Failed to send request: {e}"
+                        ))
+                    })?;
+
+                if !response.status().is_success() {
+                    let status = response.status();
+                    let error_text = response
+                        .text()
+                        .await
+                        .unwrap_or_else(|_| "Unknown error".to_string());
+                    return Err(DiscordError::ApiError(format!(
+                        "[{method} {url}] Discord API error: {status} - {error_text}"
+                    )));
+                }
+
+                response.json::<T>().await.map_err(|e| {
+                    DiscordError::ParseError(format!(
+                        "[{method} {url}] Failed to parse response: {e}"
+                    ))
+                })
+            })
+            .map_err(|e: DiscordError| e.to_pyerr())
+    }
+
+    fn get<T>(&self, url: String, py: Python) -> PyResult<Py<T>>
+    where
+        T: DeserializeOwned + PyClass + Into<PyClassInitializer<T>>,
+    {
+        self.request(Method::GET, url, Default::default())
+            .and_then(|data: T| Py::new(py, data))
+    }
+
+    fn get_vec<T>(&self, url: String, py: Python) -> PyResult<Vec<Py<T>>>
+    where
+        T: DeserializeOwned + PyClass + Into<PyClassInitializer<T>>,
+    {
+        self.request(Method::GET, url, Default::default())
+            .and_then(|data: Vec<T>| {
+                let mut output = Vec::with_capacity(data.len());
+
+                for element in data {
+                    output.push(Py::new(py, element)?);
+                }
+
+                Ok(output)
+            })
+    }
+
+    fn post<T, D>(&self, url: String, data: &D, py: Python) -> PyResult<Py<T>>
+    where
+        T: DeserializeOwned + PyClass + Into<PyClassInitializer<T>>,
+        D: Serialize + ?Sized,
+    {
+        self.request(Method::POST, url, serde_json::to_vec(data).unwrap())
+            .and_then(|data: T| Py::new(py, data))
+    }
 }
 
 #[pymethods]
@@ -27,8 +101,11 @@ impl DiscordClient {
         let auth_value = format!("Bot {token}");
         headers.insert(
             header::AUTHORIZATION,
-            header::HeaderValue::from_str(&auth_value)
-                .map_err(|e| DiscordError::InvalidToken(e.to_string()).to_pyerr())?,
+            header::HeaderValue::from_str(&auth_value).map_err(
+                |e: header::InvalidHeaderValue| {
+                    DiscordError::InvalidToken(e.to_string()).to_pyerr()
+                },
+            )?,
         );
 
         headers.insert(
@@ -52,7 +129,6 @@ impl DiscordClient {
             Runtime::new().map_err(|e| DiscordError::RuntimeError(e.to_string()).to_pyerr())?;
 
         Ok(Self {
-            token,
             http_client,
             runtime: Arc::new(runtime),
         })
@@ -65,170 +141,40 @@ impl DiscordClient {
         content: String,
         py: Python,
     ) -> PyResult<Py<Message>> {
-        let client = self.http_client.clone();
-        let url = url!("/channels/{}/messages", channel_id);
-        let data = json!({ "content": content });
-
-        self.runtime
-            .block_on(async move {
-                let response =
-                    client.post(&url).json(&data).send().await.map_err(|e| {
-                        DiscordError::ApiError(format!("Failed to send message: {e}"))
-                    })?;
-
-                if !response.status().is_success() {
-                    let status = response.status();
-                    let error_text = response
-                        .text()
-                        .await
-                        .unwrap_or_else(|_| "Unknown error".to_string());
-                    return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {status} - {error_text}"
-                    )));
-                }
-
-                let message_data: serde_json::Value = response.json().await.map_err(|e| {
-                    DiscordError::ParseError(format!("Failed to parse message response: {e}"))
-                })?;
-
-                Ok(Message::from(message_data))
-            })
-            .map_err(|e: DiscordError| e.to_pyerr())
-            .and_then(|msg| Py::new(py, msg))
+        self.post(
+            url!("/channels/{}/messages", channel_id),
+            &json!({ "content": content }),
+            py,
+        )
     }
 
     /// Get a channel by ID
     pub fn get_channel(&self, channel_id: String, py: Python) -> PyResult<Py<Channel>> {
-        let client = self.http_client.clone();
-        let url = url!("/channels/{}", channel_id);
-
-        self.runtime
-            .block_on(async move {
-                let response =
-                    client.get(&url).send().await.map_err(|e| {
-                        DiscordError::ApiError(format!("Failed to get channel: {e}"))
-                    })?;
-
-                if !response.status().is_success() {
-                    let status = response.status();
-                    let error_text = response
-                        .text()
-                        .await
-                        .unwrap_or_else(|_| "Unknown error".to_string());
-                    return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {status} - {error_text}"
-                    )));
-                }
-
-                response.json().await.map_err(|e| {
-                    DiscordError::ParseError(format!("Failed to parse channel response: {e}"))
-                })
-            })
-            .map_err(|e: DiscordError| e.to_pyerr())
-            .and_then(|channel: Channel| Py::new(py, channel))
+        self.get(url!("/channels/{}", channel_id), py)
     }
 
     /// Get the current bot user
     pub fn get_current_user(&self, py: Python) -> PyResult<Py<User>> {
-        let client = self.http_client.clone();
-        let url = url!("/users/@me");
-
-        self.runtime
-            .block_on(async move {
-                let response = client.get(&url).send().await.map_err(|e| {
-                    DiscordError::ApiError(format!("Failed to get current user: {e}"))
-                })?;
-
-                if !response.status().is_success() {
-                    let status = response.status();
-                    let error_text = response
-                        .text()
-                        .await
-                        .unwrap_or_else(|_| "Unknown error".to_string());
-                    return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {status} - {error_text}"
-                    )));
-                }
-
-                response.json().await.map_err(|e| {
-                    DiscordError::ParseError(format!("Failed to parse user response: {e}"))
-                })
-            })
-            .map_err(|e: DiscordError| e.to_pyerr())
-            .and_then(|user: User| Py::new(py, user))
+        self.get(url!("/users/@me"), py)
     }
 
     /// Get guilds for the current user
     pub fn get_current_user_guilds(&self, py: Python) -> PyResult<Vec<Py<Guild>>> {
-        let client = self.http_client.clone();
-        let url = url!("/users/@me/guilds");
-
-        self.runtime
-            .block_on(async move {
-                let response =
-                    client.get(&url).send().await.map_err(|e| {
-                        DiscordError::ApiError(format!("Failed to get guilds: {e}"))
-                    })?;
-
-                if !response.status().is_success() {
-                    let status = response.status();
-                    let error_text = response
-                        .text()
-                        .await
-                        .unwrap_or_else(|_| "Unknown error".to_string());
-                    return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {status} - {error_text}"
-                    )));
-                }
-
-                response.json().await.map_err(|e| {
-                    DiscordError::ParseError(format!("Failed to parse guilds response: {e}"))
-                })
-            })
-            .map_err(|e: DiscordError| e.to_pyerr())
-            .and_then(|guilds: Vec<Guild>| {
-                let mut py_guilds = Vec::with_capacity(guilds.len());
-                for guild in guilds {
-                    py_guilds.push(Py::new(py, guild)?);
-                }
-                Ok(py_guilds)
-            })
+        self.get_vec(url!("/users/@me/guilds"), py)
     }
 
     /// Get the gateway URL for websocket connections
     pub fn get_gateway_url(&self) -> PyResult<String> {
-        let client = self.http_client.clone();
-        let url = url!("/gateway");
-
-        self.runtime
-            .block_on(async move {
-                let response = client.get(&url).send().await.map_err(|e| {
-                    DiscordError::ApiError(format!("Failed to get gateway URL: {e}"))
-                })?;
-
-                if !response.status().is_success() {
-                    let status = response.status();
-                    let error_text = response
-                        .text()
-                        .await
-                        .unwrap_or_else(|_| "Unknown error".to_string());
-                    return Err(DiscordError::ApiError(format!(
-                        "Discord API error: {status} - {error_text}"
-                    )));
-                }
-
-                let gateway_data: serde_json::Value = response.json().await.map_err(|e| {
-                    DiscordError::ParseError(format!("Failed to parse gateway response: {e}"))
-                })?;
-
+        self.request::<serde_json::Value>(Method::GET, url!("/gateway"), Default::default())
+            .and_then(|gateway_data| {
                 gateway_data
                     .get("url")
                     .and_then(|url| url.as_str())
                     .map(ToString::to_string)
                     .ok_or_else(|| {
                         DiscordError::ParseError("Gateway URL not found in response".to_string())
+                            .to_pyerr()
                     })
             })
-            .map_err(|e: DiscordError| e.to_pyerr())
     }
 }
