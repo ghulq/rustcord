@@ -55,6 +55,36 @@ class CommandOptionType(IntEnum):
     NUMBER = 10
     ATTACHMENT = 11
     
+class PermissionType(IntEnum):
+    """Discord application command permission types"""
+    ROLE = 1
+    USER = 2
+    CHANNEL = 3
+    
+class ApplicationCommandPermission:
+    """Discord application command permission"""
+    
+    def __init__(self, id: str, type: PermissionType, permission: bool):
+        """
+        Initialize a new permission
+        
+        Args:
+            id: ID of the role, user, or channel
+            type: Type of permission target
+            permission: Whether the permission is allowed (True) or denied (False)
+        """
+        self.id = id
+        self.type = type
+        self.permission = permission
+        
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to API payload format"""
+        return {
+            "id": self.id,
+            "type": int(self.type),
+            "permission": self.permission
+        }
+    
 class ComponentType(IntEnum):
     """Discord UI component types"""
     ACTION_ROW = 1
@@ -583,7 +613,11 @@ class CommandOption:
                  description: str,
                  required: bool = False,
                  choices: Optional[List[Dict[str, Union[str, int, float]]]] = None,
-                 options: Optional[List['CommandOption']] = None):
+                 options: Optional[List['CommandOption']] = None,
+                 autocomplete: bool = False,
+                 min_value: Optional[Union[int, float]] = None,
+                 max_value: Optional[Union[int, float]] = None,
+                 channel_types: Optional[List[ChannelType]] = None):
         """
         Initialize a new command option
         
@@ -594,6 +628,10 @@ class CommandOption:
             required: Whether this option is required
             choices: Predefined choices for the user
             options: Sub-options for this option (for subcommands)
+            autocomplete: Whether this option should use autocomplete
+            min_value: Minimum value for INTEGER and NUMBER options
+            max_value: Maximum value for INTEGER and NUMBER options
+            channel_types: Channel types to include for CHANNEL options
         """
         self.type = type
         self.name = name
@@ -601,6 +639,10 @@ class CommandOption:
         self.required = required
         self.choices = choices or []
         self.options = options or []
+        self.autocomplete = autocomplete
+        self.min_value = min_value
+        self.max_value = max_value
+        self.channel_types = channel_types or []
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to API payload format"""
@@ -611,8 +653,34 @@ class CommandOption:
             "required": self.required
         }
         
-        if self.choices:
+        # Add autocomplete if enabled (only for STRING, INTEGER, or NUMBER types)
+        if self.autocomplete and self.type in (
+            CommandOptionType.STRING, 
+            CommandOptionType.INTEGER, 
+            CommandOptionType.NUMBER
+        ):
+            data["autocomplete"] = True
+            
+        # Choices and autocomplete are mutually exclusive
+        if self.choices and not self.autocomplete:
             data["choices"] = self.choices
+            
+        # Add min/max values for numeric types
+        if self.min_value is not None and self.type in (
+            CommandOptionType.INTEGER, 
+            CommandOptionType.NUMBER
+        ):
+            data["min_value"] = self.min_value
+            
+        if self.max_value is not None and self.type in (
+            CommandOptionType.INTEGER, 
+            CommandOptionType.NUMBER
+        ):
+            data["max_value"] = self.max_value
+            
+        # Add channel types for CHANNEL type options
+        if self.channel_types and self.type == CommandOptionType.CHANNEL:
+            data["channel_types"] = [int(t) for t in self.channel_types]
             
         if self.options:
             data["options"] = [opt.to_dict() for opt in self.options]
@@ -628,7 +696,10 @@ class ApplicationCommand:
                  description: str,
                  options: Optional[List[CommandOption]] = None,
                  default_permission: bool = True,
-                 guild_id: Optional[str] = None):
+                 default_member_permissions: Optional[str] = None,
+                 dm_permission: bool = True,
+                 guild_id: Optional[str] = None,
+                 permissions: Optional[List[ApplicationCommandPermission]] = None):
         """
         Initialize a new application command
         
@@ -636,14 +707,20 @@ class ApplicationCommand:
             name: Name of command (3-32 characters)
             description: Description (1-100 characters)
             options: Command options
-            default_permission: Whether the command is enabled by default
+            default_permission: (Deprecated) Whether the command is enabled by default
+            default_member_permissions: String representing the permissions as an integer bitfield
+            dm_permission: Whether the command is available in DMs
             guild_id: Guild ID if this is a guild command
+            permissions: Command-specific permissions
         """
         self.name = name
         self.description = description
         self.options = options or []
         self.default_permission = default_permission
+        self.default_member_permissions = default_member_permissions
+        self.dm_permission = dm_permission
         self.guild_id = guild_id
+        self.permissions = permissions or []
         self.id = None
         
     def to_dict(self) -> Dict[str, Any]:
@@ -651,13 +728,38 @@ class ApplicationCommand:
         data = {
             "name": self.name,
             "description": self.description,
-            "default_permission": self.default_permission,
         }
         
+        # For backwards compatibility, still include default_permission
+        data["default_permission"] = self.default_permission
+        
+        # New permission system
+        if self.default_member_permissions is not None:
+            data["default_member_permissions"] = self.default_member_permissions
+            
+        # DM permissions, only include if False as True is the default
+        if not self.dm_permission:
+            data["dm_permission"] = False
+            
         if self.options:
             data["options"] = [opt.to_dict() for opt in self.options]
             
         return data
+        
+    def get_permissions_payload(self) -> Dict[str, Any]:
+        """Get the permissions payload for this command"""
+        if not self.id:
+            raise ValueError("Command must be registered before setting permissions")
+            
+        if not self.guild_id:
+            raise ValueError("Permissions can only be set for guild commands")
+            
+        return {
+            "id": self.id,
+            "application_id": None,  # Will be filled in by the client
+            "guild_id": self.guild_id,
+            "permissions": [perm.to_dict() for perm in self.permissions]
+        }
 
 
 class Component:
@@ -898,12 +1000,25 @@ class Interaction:
             self.command_name = ""
             self.command_id = None
             self.options = []
+        # Autocomplete details if this is an autocomplete interaction
+        elif self.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE:
+            self.command_name = self.data.get("name", "")
+            self.command_id = self.data.get("id")
+            self.options = self.data.get("options", [])
+            # The option that is currently being typed by the user
+            self.focused_option = None
+            # Find the option that has focus=True
+            for option in self.options:
+                if option.get("focused", False):
+                    self.focused_option = option
+                    break
         else:
             self.command_name = ""
             self.command_id = None
             self.options = []
             self.custom_id = ""
             self.values = []
+            self.focused_option = None
 
     def get_option(self, name: str) -> Optional[Dict[str, Any]]:
         """
@@ -1026,6 +1141,41 @@ class Interaction:
             "type": InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
             "data": {
                 "flags": 64 if ephemeral else 0
+            }
+        }
+        
+        # Get a client instance to respond
+        client = _rust.DiscordClient(os.environ.get("DISCORD_TOKEN", ""))
+        await client.create_interaction_response(self.id, self.token, data)
+        
+    async def respond_autocomplete(self, choices: List[Dict[str, Any]]) -> None:
+        """
+        Respond to an autocomplete interaction with choices
+        
+        Args:
+            choices: List of choice objects with name and value properties
+                Example: [{'name': 'Choice 1', 'value': 'value1'}, ...]
+        """
+        # Import here to avoid circular imports
+        from . import _rust
+        
+        # Make sure this is an autocomplete interaction
+        if self.type != InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE:
+            raise ValueError("This is not an autocomplete interaction")
+            
+        # Verify we have a valid interaction ID and token
+        if not self.id or not self.token:
+            raise ValueError("Cannot respond to autocomplete without valid ID and token")
+            
+        # Maximum 25 choices
+        if len(choices) > 25:
+            choices = choices[:25]
+            
+        # Create autocomplete response data
+        data = {
+            "type": InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT,
+            "data": {
+                "choices": choices
             }
         }
         
