@@ -10,3 +10,15 @@ pub(crate) mod util;
 pub const API_VERSION: u8 = 10;
 /// Base URL for Discord API
 pub const API_BASE_URL: &str = "https://discord.com/api";
+
+macro_rules! url {
+    ($e:literal) => {
+        format!(concat!("{}/v{}", $e), crate::discord::API_BASE_URL, crate::discord::API_VERSION)
+    };
+
+    ($e:literal, $($rest:tt)*) => {
+        format!(concat!("{}/v{}", $e), crate::discord::API_BASE_URL, crate::discord::API_VERSION, $($rest)*)
+    };
+}
+
+pub(crate) use url;

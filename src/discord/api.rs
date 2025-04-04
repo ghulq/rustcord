@@ -1,7 +1,7 @@
 use crate::discord::{
-    API_BASE_URL, API_VERSION,
     errors::DiscordError,
     models::{Channel, Guild, Message, User},
+    url,
 };
 use pyo3::prelude::*;
 use reqwest::{Client as ReqwestClient, header};
@@ -66,7 +66,7 @@ impl DiscordClient {
         py: Python,
     ) -> PyResult<Py<Message>> {
         let client = self.http_client.clone();
-        let url = format!("{API_BASE_URL}/v{API_VERSION}/channels/{channel_id}/messages");
+        let url = url!("/channels/{}/messages", channel_id);
         let data = json!({ "content": content });
 
         self.runtime
@@ -100,7 +100,7 @@ impl DiscordClient {
     /// Get a channel by ID
     pub fn get_channel(&self, channel_id: String, py: Python) -> PyResult<Py<Channel>> {
         let client = self.http_client.clone();
-        let url = format!("{API_BASE_URL}/v{API_VERSION}/channels/{channel_id}");
+        let url = url!("/channels/{}", channel_id);
 
         self.runtime
             .block_on(async move {
@@ -131,7 +131,7 @@ impl DiscordClient {
     /// Get the current bot user
     pub fn get_current_user(&self, py: Python) -> PyResult<Py<User>> {
         let client = self.http_client.clone();
-        let url = format!("{API_BASE_URL}/v{API_VERSION}/users/@me");
+        let url = url!("/users/@me");
 
         self.runtime
             .block_on(async move {
@@ -161,7 +161,7 @@ impl DiscordClient {
     /// Get guilds for the current user
     pub fn get_current_user_guilds(&self, py: Python) -> PyResult<Vec<Py<Guild>>> {
         let client = self.http_client.clone();
-        let url = format!("{API_BASE_URL}/v{API_VERSION}/users/@me/guilds");
+        let url = url!("/users/@me/guilds");
 
         self.runtime
             .block_on(async move {
@@ -198,7 +198,7 @@ impl DiscordClient {
     /// Get the gateway URL for websocket connections
     pub fn get_gateway_url(&self) -> PyResult<String> {
         let client = self.http_client.clone();
-        let url = format!("{API_BASE_URL}/v{API_VERSION}/gateway");
+        let url = url!("/gateway");
 
         self.runtime
             .block_on(async move {
