@@ -44,22 +44,6 @@ util::py_getter_class! {
                 self.channel_id.as_deref().unwrap_or("None"),
             )
         }
-
-        pub fn __repr__(&self) -> String {
-            format!(
-                "VoiceState(user_id='{}', session_id='{}', channel_id={}, guild_id={})",
-                self.user_id,
-                self.session_id,
-                match &self.channel_id {
-                    Some(id) => format!("'{id}'"),
-                    None => "None".to_string(),
-                },
-                match &self.guild_id {
-                    Some(id) => format!("'{id}'"),
-                    None => "None".to_string(),
-                }
-            )
-        }
     }
 }
 
@@ -84,13 +68,6 @@ util::py_getter_class! {
                 self.guild_id, self.endpoint
             )
         }
-
-        pub fn __repr__(&self) -> String {
-            format!(
-                "VoiceServerInfo(token='{}', guild_id='{}', endpoint='{}')",
-                self.token, self.guild_id, self.endpoint
-            )
-        }
     }
 }
 
@@ -110,13 +87,6 @@ util::py_getter_class! {
     impl Message {
         pub fn __str__(&self) -> String {
             format!("<Message id={} content={}>", self.id, self.content)
-        }
-
-        pub fn __repr__(&self) -> String {
-            format!(
-                "Message(id='{}', channel_id='{}', content='{}', author_id='{}', author_username='{}')",
-                self.id, self.channel_id, self.content, self.author_id, self.author_username
-            )
         }
     }
 }
@@ -207,13 +177,6 @@ util::py_getter_class! {
         pub fn __str__(&self) -> String {
             format!("<User id={} username={}>", self.id, self.username)
         }
-
-        pub fn __repr__(&self) -> String {
-            format!(
-                "User(id='{}', username='{}', discriminator='{}', bot={})",
-                self.id, self.username, self.discriminator, self.bot
-            )
-        }
     }
 }
 
@@ -236,19 +199,6 @@ util::py_getter_class! {
     impl Channel {
         pub fn __str__(&self) -> String {
             format!("<Channel id={} name={}>", self.id, self.name)
-        }
-
-        pub fn __repr__(&self) -> String {
-            format!(
-                "Channel(id='{}', name='{}', channel_type={}, guild_id={})",
-                self.id,
-                self.name,
-                self.channel_type,
-                match &self.guild_id {
-                    Some(id) => format!("'{id}'"),
-                    None => "None".to_string(),
-                }
-            )
         }
     }
 }
@@ -453,13 +403,6 @@ util::py_getter_class! {
     impl Guild {
         pub fn __str__(&self) -> String {
             format!("<Guild id={} name={}>", self.id, self.name)
-        }
-
-        pub fn __repr__(&self) -> String {
-            format!(
-                "Guild(id='{}', name='{}', owner_id='{}')",
-                self.id, self.name, self.owner_id
-            )
         }
     }
 }
