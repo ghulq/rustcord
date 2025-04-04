@@ -7,10 +7,8 @@ import logging
 import os
 from enum import IntFlag
 from typing import (
-    Dict,
     Any,
     Optional,
-    List,
     Callable,
     Awaitable,
     TYPE_CHECKING,
@@ -119,10 +117,10 @@ class Client:
         self.shard_count = shard_count
         self.rest_client = _rust.DiscordClient(self.token)
         self.gateway_client = _rust.GatewayClient(self.token, int(self.intents))
-        self.event_handlers: Dict[str, List[Callable]] = {}
+        self.event_handlers: dict[str, list[Callable]] = {}
         self._gateway_url = ''
         self._ready = asyncio.Event()
-        self._command_registrations: List[Callable[[], Awaitable[None]]] = []
+        self._command_registrations: list[Callable[[], Awaitable[None]]] = []
         self._is_sharded = shard_count > 1
 
         # Register built-in event handlers
@@ -131,7 +129,7 @@ class Client:
         self.gateway_client.on('VOICE_STATE_UPDATE', self._handle_voice_state_update)
         self.gateway_client.on('VOICE_SERVER_UPDATE', self._handle_voice_server_update)
 
-    def _handle_ready(self, data: Dict[str, Any]) -> None:
+    def _handle_ready(self, data: dict[str, Any]) -> None:
         """Internal handler for the READY event"""
         logger.info(f"Connected to Discord as {data.get('user', {}).get('username')}")
         self._ready.set()
@@ -139,14 +137,14 @@ class Client:
         # Call user-defined event handlers
         asyncio.create_task(self._dispatch_event('ready', data))
 
-    def _handle_interaction(self, data: Dict[str, Any]) -> None:
+    def _handle_interaction(self, data: dict[str, Any]) -> None:
         """Internal handler for the INTERACTION_CREATE event"""
         logger.debug(f"Received interaction: {data.get('type')}")
 
         # Process the interaction
         asyncio.create_task(self.handle_interaction(data))
 
-    def _handle_voice_state_update(self, data: Dict[str, Any]) -> None:
+    def _handle_voice_state_update(self, data: dict[str, Any]) -> None:
         """Internal handler for the VOICE_STATE_UPDATE event"""
         logger.debug(
             f"Voice state update: guild_id={data.get('guild_id')}, channel_id={data.get('channel_id')}"
@@ -155,14 +153,14 @@ class Client:
         # Dispatch to user event handlers
         asyncio.create_task(self._dispatch_event('voice_state_update', data))
 
-    def _handle_voice_server_update(self, data: Dict[str, Any]) -> None:
+    def _handle_voice_server_update(self, data: dict[str, Any]) -> None:
         """Internal handler for the VOICE_SERVER_UPDATE event"""
         logger.debug(f"Voice server update: guild_id={data.get('guild_id')}")
 
         # Dispatch to user event handlers
         asyncio.create_task(self._dispatch_event('voice_server_update', data))
 
-    async def _dispatch_event(self, event_name: str, data: Dict[str, Any]) -> None:
+    async def _dispatch_event(self, event_name: str, data: dict[str, Any]) -> None:
         """Dispatch an event to all registered handlers"""
         handlers = self.event_handlers.get(event_name, [])
         for handler in handlers:
@@ -290,7 +288,7 @@ class Client:
             logger.error(f'Failed to get current user: {e}')
             return None
 
-    async def get_current_guilds(self) -> List[Guild]:
+    async def get_current_guilds(self) -> list[Guild]:
         """Get guilds for the current user"""
         try:
             rust_guilds = await self.rest_client.get_current_user_guilds()
@@ -304,7 +302,7 @@ class Client:
         channel_id: str,
         content: Optional[str] = None,
         embed: Optional['Embed'] = None,
-        embeds: Optional[List['Embed']] = None,
+        embeds: Optional[list['Embed']] = None,
     ) -> Optional[Message]:
         """
         Send a message to a channel
@@ -389,7 +387,7 @@ class Client:
 
     async def register_global_command(
         self, command: ApplicationCommand
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Register a global slash command with Discord
 
@@ -409,7 +407,7 @@ class Client:
 
     async def register_guild_command(
         self, guild_id: str, command: ApplicationCommand
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Register a guild-specific slash command with Discord
 
@@ -444,7 +442,7 @@ class Client:
         self,
         name: str,
         description: str,
-        options: Optional[List[CommandOption]] = None,
+        options: Optional[list[CommandOption]] = None,
         guild_id: Optional[str] = None,
     ):
         """
@@ -464,7 +462,7 @@ class Client:
 
         def decorator(func):
             @self.event('interaction')
-            async def interaction_handler(data: Dict[str, Any]):
+            async def interaction_handler(data: dict[str, Any]):
                 interaction = Interaction(data)
 
                 # Check if this is a slash command interaction with the right name
@@ -498,7 +496,7 @@ class Client:
 
         return decorator
 
-    async def handle_interaction(self, interaction_data: Dict[str, Any]) -> None:
+    async def handle_interaction(self, interaction_data: dict[str, Any]) -> None:
         """
         Handle an incoming interaction
 
@@ -524,7 +522,7 @@ class Client:
             )
 
     async def create_interaction_response(
-        self, interaction_id: str, interaction_token: str, response_data: Dict[str, Any]
+        self, interaction_id: str, interaction_token: str, response_data: dict[str, Any]
     ) -> None:
         """
         Create a response to an interaction
@@ -542,7 +540,7 @@ class Client:
             logger.error(f'Failed to create interaction response: {e}')
 
     async def edit_interaction_response(
-        self, interaction_token: str, response_data: Dict[str, Any]
+        self, interaction_token: str, response_data: dict[str, Any]
     ) -> None:
         """
         Edit an original interaction response
@@ -691,7 +689,7 @@ class InteractionResponse:
     """Helper class for creating Discord interaction responses"""
 
     @staticmethod
-    def message(content: str, ephemeral: bool = False) -> Dict[str, Any]:
+    def message(content: str, ephemeral: bool = False) -> dict[str, Any]:
         """
         Create a message response
 
@@ -708,7 +706,7 @@ class InteractionResponse:
         }
 
     @staticmethod
-    def deferred_message(ephemeral: bool = False) -> Dict[str, Any]:
+    def deferred_message(ephemeral: bool = False) -> dict[str, Any]:
         """
         Create a deferred message response
 
@@ -728,10 +726,10 @@ class InteractionResponse:
         title: Optional[str] = None,
         description: Optional[str] = None,
         color: int = 0x5865F2,
-        fields: Optional[List[Dict[str, Any]]] = None,
+        fields: Optional[list[dict[str, Any]]] = None,
         ephemeral: bool = False,
         embed: Optional['Embed'] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create an embed response
 

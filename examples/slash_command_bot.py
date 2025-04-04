@@ -7,7 +7,7 @@ import os
 import sys
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Any
 
 from rustcord.client import Client
 from rustcord.models import CommandOption, CommandOptionType, Interaction
@@ -23,7 +23,7 @@ client = Client()
 
 
 @client.event('ready')
-async def on_ready(data: Dict[str, Any]):
+async def on_ready(data: dict[str, Any]):
     """Called when the bot is ready"""
     # Get bot info
     me = await client.get_current_user()

@@ -148,14 +148,14 @@ from rustcord.embeds import Embed, Color
 client = Client(intents=Intents.DEFAULT)
 
 @client.event("ready")
-async def on_ready(data: Dict[str, Any]):
+async def on_ready(data: dict[str, Any]):
     """Called when the bot is ready"""
     me = await client.get_current_user()
     print(f"Logged in as {me.username}")
     print("Ready to send rich embeds!")
 
 @client.event("message")
-async def on_message(data: Dict[str, Any]):
+async def on_message(data: dict[str, Any]):
     """Called when a message is received"""
     content = data.get("content", "")
     author = data.get("author", {})

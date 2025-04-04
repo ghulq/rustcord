@@ -4,7 +4,7 @@ Example Discord bot demonstrating rich embeds with RustCord
 
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Any
 
 from rustcord import Client
 from rustcord.embeds import Embed, Color
@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 client = Client()  # Token will be read from DISCORD_TOKEN environment variable
 
 
-async def on_ready(data: Dict[str, Any]):
+async def on_ready(data: dict[str, Any]):
     """Called when the bot is ready"""
     user = data.get('user', {})
     username = user.get('username', 'Unknown')
@@ -25,7 +25,7 @@ async def on_ready(data: Dict[str, Any]):
     print('Ready to send rich embeds!')
 
 
-async def on_message(data: Dict[str, Any]):
+async def on_message(data: dict[str, Any]):
     """Called when a message is received"""
     content = data.get('content', '')
     author = data.get('author', {})

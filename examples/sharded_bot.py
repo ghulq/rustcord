@@ -9,7 +9,7 @@ Each shard handles a subset of the guilds based on the formula:
 import asyncio
 import os
 import logging
-from typing import Dict, Any, List
+from typing import Any
 from rustcord import Client, Intents
 
 # Set up logging
@@ -23,12 +23,12 @@ SHARD_COUNT = 2  # Number of shards to use
 BOT_TOKEN = os.environ.get('DISCORD_TOKEN')
 
 # Store shard clients
-shard_clients: List[Client] = []
-guild_counts: List[int] = [0 for _ in range(SHARD_COUNT)]
-guild_lists: List[List[str]] = [[] for _ in range(SHARD_COUNT)]
+shard_clients: list[Client] = []
+guild_counts: list[int] = [0 for _ in range(SHARD_COUNT)]
+guild_lists: list[list[str]] = [[] for _ in range(SHARD_COUNT)]
 
 
-async def on_ready(data: Dict[str, Any], shard_id: int):
+async def on_ready(data: dict[str, Any], shard_id: int):
     """Called when a shard is ready"""
     logger.info(f'Shard {shard_id}/{SHARD_COUNT} is ready!')
 
@@ -76,7 +76,7 @@ async def on_ready(data: Dict[str, Any], shard_id: int):
                 logger.info(f'  - ... and {len(guild_lists[i]) - 5} more')
 
 
-async def on_message(data: Dict[str, Any], shard_id: int):
+async def on_message(data: dict[str, Any], shard_id: int):
     """Called when a message is received on any shard"""
     content = data.get('content', '')
     author = data.get('author', {})

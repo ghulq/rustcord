@@ -5,7 +5,7 @@ Example Discord bot demonstrating voice features with RustCord
 
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Any
 
 from rustcord import (
     Client,
@@ -54,12 +54,12 @@ volume_options = [
 ]
 
 # Store active voice connections and players
-voice_connections: Dict[str, VoiceConnection] = {}
-audio_players: Dict[str, AudioPlayer] = {}
+voice_connections: dict[str, VoiceConnection] = {}
+audio_players: dict[str, AudioPlayer] = {}
 
 
 @client.event
-async def on_ready(data: Dict[str, Any]):
+async def on_ready(data: dict[str, Any]):
     """Called when the bot is ready"""
     user = data.get('user', {})
     logger.info(f"Logged in as {user.get('username')}#{user.get('discriminator')}")

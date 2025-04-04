@@ -6,7 +6,7 @@ import asyncio
 import logging
 import os
 import sys
-from typing import Dict, Any
+from typing import Any
 
 # Add the parent directory to the Python path so we can import rustcord
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -25,7 +25,7 @@ client = Client(intents=Intents.DEFAULT)
 
 
 @client.event('ready')
-async def on_ready(data: Dict[str, Any]):
+async def on_ready(data: dict[str, Any]):
     """Called when the bot is ready and connected to Discord"""
     try:
         # Get information about the bot user
@@ -57,7 +57,7 @@ async def on_ready(data: Dict[str, Any]):
 
 
 @client.event('message')
-async def on_message(data: Dict[str, Any]):
+async def on_message(data: dict[str, Any]):
     """Called when a message is received"""
     try:
         # Extract message content

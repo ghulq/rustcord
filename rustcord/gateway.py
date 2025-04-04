@@ -6,9 +6,7 @@ import asyncio
 import logging
 from enum import Enum
 from typing import (
-    Dict,
     Any,
-    List,
     Callable,
     Union,
     Awaitable,
@@ -42,7 +40,7 @@ class GatewayEvent(Enum):
 
 
 # Type definition for event handlers
-EventHandler = Callable[[Dict[str, Any]], Union[None, Awaitable[None]]]
+EventHandler = Callable[[dict[str, Any]], Union[None, Awaitable[None]]]
 
 
 class Gateway:
@@ -63,7 +61,7 @@ class Gateway:
         self.token = token
         self.intents = intents
         self._gateway = _rust.GatewayClient(token, intents)
-        self._event_handlers: Dict[str, List[EventHandler]] = {}
+        self._event_handlers: dict[str, list[EventHandler]] = {}
 
     async def connect(self, gateway_url: str):
         """
@@ -91,7 +89,7 @@ class Gateway:
         """Disconnect from Discord Gateway"""
         await self._gateway.disconnect()
 
-    async def _dispatch_event(self, event_name: str, data: Dict[str, Any]):
+    async def _dispatch_event(self, event_name: str, data: dict[str, Any]):
         """Dispatch an event to all registered handlers"""
         handlers = self._event_handlers.get(event_name, [])
         for handler in handlers:

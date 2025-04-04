@@ -4,7 +4,7 @@ Discord API data models
 
 import os
 from enum import IntEnum
-from typing import Optional, List, Dict, Any, ClassVar, Type, TypeVar, Union
+from typing import Optional, Any, ClassVar, Type, TypeVar, Union
 
 from . import _rust
 
@@ -594,8 +594,8 @@ class CommandOption:
         name: str,
         description: str,
         required: bool = False,
-        choices: Optional[List[Dict[str, Union[str, int, float]]]] = None,
-        options: Optional[List['CommandOption']] = None,
+        choices: Optional[list[dict[str, Union[str, int, float]]]] = None,
+        options: Optional[list['CommandOption']] = None,
     ):
         """
         Initialize a new command option
@@ -615,7 +615,7 @@ class CommandOption:
         self.choices = choices or []
         self.options = options or []
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to API payload format"""
         data = {
             'type': int(self.type),
@@ -640,7 +640,7 @@ class ApplicationCommand:
         self,
         name: str,
         description: str,
-        options: Optional[List[CommandOption]] = None,
+        options: Optional[list[CommandOption]] = None,
         default_permission: bool = True,
         guild_id: Optional[str] = None,
     ):
@@ -661,7 +661,7 @@ class ApplicationCommand:
         self.guild_id = guild_id
         self.id = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to API payload format"""
         data = {
             'name': self.name,
@@ -678,7 +678,7 @@ class ApplicationCommand:
 class Component:
     """Base class for all Discord UI components"""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to component API payload format"""
         raise NotImplementedError('Subclasses must implement to_dict()')
 
@@ -692,7 +692,7 @@ class Button(Component):
         label: Optional[str] = None,
         custom_id: Optional[str] = None,
         url: Optional[str] = None,
-        emoji: Optional[Union[str, Dict[str, Any]]] = None,
+        emoji: Optional[Union[str, dict[str, Any]]] = None,
         disabled: bool = False,
     ):
         """
@@ -725,7 +725,7 @@ class Button(Component):
             if url is not None:
                 raise ValueError('url cannot be used with non-LINK buttons')
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to component API payload format"""
         data = {
             'type': ComponentType.BUTTON,
@@ -758,7 +758,7 @@ class SelectOption:
         label: str,
         value: str,
         description: Optional[str] = None,
-        emoji: Optional[Union[str, Dict[str, Any]]] = None,
+        emoji: Optional[Union[str, dict[str, Any]]] = None,
         default: bool = False,
     ):
         """
@@ -777,7 +777,7 @@ class SelectOption:
         self.emoji = emoji
         self.default = default
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to API payload format"""
         data = {'label': self.label, 'value': self.value, 'default': self.default}
 
@@ -799,7 +799,7 @@ class SelectMenu(Component):
     def __init__(
         self,
         custom_id: str,
-        options: Optional[List[SelectOption]] = None,
+        options: Optional[list[SelectOption]] = None,
         placeholder: Optional[str] = None,
         min_values: int = 1,
         max_values: int = 1,
@@ -836,7 +836,7 @@ class SelectMenu(Component):
         if self.min_values > self.max_values:
             raise ValueError('min_values cannot be greater than max_values')
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to component API payload format"""
         data = {
             'type': self.type,
@@ -859,7 +859,7 @@ class SelectMenu(Component):
 class ActionRow(Component):
     """Discord Action Row component container"""
 
-    def __init__(self, components: Optional[List[Component]] = None):
+    def __init__(self, components: Optional[list[Component]] = None):
         """
         Initialize a new action row
 
@@ -872,7 +872,7 @@ class ActionRow(Component):
         if len(self.components) > 5:
             raise ValueError('Action rows can have at most 5 components')
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to component API payload format"""
         return {
             'type': ComponentType.ACTION_ROW,
@@ -883,7 +883,7 @@ class ActionRow(Component):
 class Interaction:
     """Discord Interaction model for slash commands and components"""
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, data: dict[str, Any]):
         """
         Initialize from raw interaction data
 
@@ -922,7 +922,7 @@ class Interaction:
             self.custom_id = ''
             self.values = []
 
-    def get_option(self, name: str) -> Optional[Dict[str, Any]]:
+    def get_option(self, name: str) -> Optional[dict[str, Any]]:
         """
         Get an option from the interaction by name
 
@@ -974,8 +974,8 @@ class Interaction:
         self,
         content: Optional[str] = None,
         ephemeral: bool = False,
-        embeds: Optional[List[Dict[str, Any]]] = None,
-        components: Optional[List[Component]] = None,
+        embeds: Optional[list[dict[str, Any]]] = None,
+        components: Optional[list[Component]] = None,
     ) -> None:
         """
         Respond to this interaction

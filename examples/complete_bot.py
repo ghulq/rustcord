@@ -7,7 +7,7 @@ import os
 import sys
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Any
 
 import rustcord
 from rustcord.client import Client, Intents
@@ -24,7 +24,7 @@ client = Client(intents=Intents.ALL)
 
 
 @client.event('ready')
-async def on_ready(data: Dict[str, Any]):
+async def on_ready(data: dict[str, Any]):
     """Called when the bot is ready"""
     # Get bot info
     me = await client.get_current_user()
@@ -46,7 +46,7 @@ async def on_ready(data: Dict[str, Any]):
 
 
 @client.event('message')
-async def on_message(data: Dict[str, Any]):
+async def on_message(data: dict[str, Any]):
     """Called when a message is received"""
     # Extract message content
     content = data.get('content', '')

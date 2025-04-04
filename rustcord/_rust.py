@@ -12,7 +12,7 @@ import random
 import time
 import sys
 from enum import Enum
-from typing import Dict, Any, Callable, Optional
+from typing import Any, Callable, Optional
 
 # Set up logging first
 __version__ = '0.1.2-py'
@@ -300,7 +300,7 @@ class DiscordClient:
             self.application_id = user.id
             return user.id
 
-    async def create_global_command(self, command_data: Dict[str, Any]):
+    async def create_global_command(self, command_data: dict[str, Any]):
         """
         Register a global slash command with Discord
 
@@ -324,7 +324,7 @@ class DiscordClient:
         logger.info(f"Registered global command: {command_data['name']}")
         return response
 
-    async def create_guild_command(self, guild_id: str, command_data: Dict[str, Any]):
+    async def create_guild_command(self, guild_id: str, command_data: dict[str, Any]):
         """
         Register a guild-specific slash command with Discord
 
@@ -424,7 +424,7 @@ class DiscordClient:
         logger.info(f'Deleted guild command: {command_id} from guild {guild_id}')
 
     async def create_interaction_response(
-        self, interaction_id: str, interaction_token: str, response_data: Dict[str, Any]
+        self, interaction_id: str, interaction_token: str, response_data: dict[str, Any]
     ):
         """
         Create a response to an interaction
@@ -447,7 +447,7 @@ class DiscordClient:
         logger.debug(f'Created interaction response for {interaction_id}')
 
     async def edit_interaction_response(
-        self, application_id: str, interaction_token: str, response_data: Dict[str, Any]
+        self, application_id: str, interaction_token: str, response_data: dict[str, Any]
     ):
         """
         Edit an original interaction response
@@ -865,7 +865,7 @@ class GatewayClient:
                 # Try to reconnect
                 await self._handle_reconnect(code=4000, reason=f'Event loop error: {e}')
 
-    async def _dispatch_event(self, event_name: str, event_data: Dict[str, Any]):
+    async def _dispatch_event(self, event_name: str, event_data: dict[str, Any]):
         """Dispatch event to callback with error handling"""
         try:
             if callback := self.event_callbacks.get(event_name):

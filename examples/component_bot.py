@@ -6,7 +6,7 @@ import os
 import sys
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Any
 
 from rustcord import (
     Client,
@@ -40,7 +40,7 @@ client = Client(
 
 # Command handlers
 @client.event('ready')
-async def on_ready(data: Dict[str, Any]):
+async def on_ready(data: dict[str, Any]):
     """Called when the bot is ready"""
     logger.info(
         f"Connected as {data['user']['username']}#{data['user']['discriminator']}"
@@ -77,7 +77,7 @@ async def on_ready(data: Dict[str, Any]):
 
 
 @client.event('message')
-async def on_message(data: Dict[str, Any]):
+async def on_message(data: dict[str, Any]):
     """Called when a message is received"""
     # Skip messages from this bot
     if data.get('author', {}).get('bot', False):
@@ -93,7 +93,7 @@ async def on_message(data: Dict[str, Any]):
 
 
 @client.event('interaction')
-async def on_interaction(data: Dict[str, Any]) -> None:
+async def on_interaction(data: dict[str, Any]) -> None:
     """Called when a slash command is invoked"""
     # Create an interaction object
     interaction = Interaction(data)

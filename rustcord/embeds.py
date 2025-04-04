@@ -5,7 +5,7 @@ This module provides a clean API for building rich embeds for Discord messages.
 """
 
 from datetime import datetime
-from typing import Dict, Any, Optional, List, Union
+from typing import Any, Optional, Union
 
 
 class Color:
@@ -70,7 +70,7 @@ class EmbedField:
         self.value = value[:1024] if value else ''
         self.inline = inline
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert field to API payload format"""
         return {'name': self.name, 'value': self.value, 'inline': self.inline}
 
@@ -117,11 +117,11 @@ class Embed:
         self.color = color
         self.url = url
         self.timestamp = timestamp
-        self._fields: List[EmbedField] = []
-        self._author: Optional[Dict[str, Any]] = None
-        self._footer: Optional[Dict[str, Any]] = None
-        self._image: Optional[Dict[str, Any]] = None
-        self._thumbnail: Optional[Dict[str, Any]] = None
+        self._fields: list[EmbedField] = []
+        self._author: Optional[dict[str, Any]] = None
+        self._footer: Optional[dict[str, Any]] = None
+        self._image: Optional[dict[str, Any]] = None
+        self._thumbnail: Optional[dict[str, Any]] = None
 
     def set_title(self, title: str) -> 'Embed':
         """Set the title of the embed
@@ -271,13 +271,13 @@ class Embed:
         self._fields = []
         return self
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the embed to API payload format
 
         Returns:
             API-ready embed data
         """
-        embed_dict: Dict[str, Any] = {}
+        embed_dict: dict[str, Any] = {}
 
         if self.title:
             embed_dict['title'] = self.title
