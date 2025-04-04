@@ -36,6 +36,8 @@ except ImportError:
 
 # Mock Discord data models
 class Message:
+    __slots__ = ('id', 'channel_id', 'content', 'author_id', 'author_username')
+
     def __init__(
         self,
         id: str,
@@ -55,6 +57,8 @@ class Message:
 
 
 class User:
+    __slots__ = ('id', 'username', 'discriminator', 'bot')
+
     def __init__(self, id: str, username: str, discriminator: str, bot: bool = False):
         self.id = id
         self.username = username
@@ -66,6 +70,8 @@ class User:
 
 
 class Channel:
+    __slots__ = ('id', 'name', 'channel_type', 'guild_id')
+
     def __init__(
         self, id: str, name: str, channel_type: int, guild_id: Optional[str] = None
     ):
@@ -79,6 +85,8 @@ class Channel:
 
 
 class Guild:
+    __slots__ = ('id', 'name', 'owner_id')
+
     def __init__(self, id: str, name: str, owner_id: str):
         self.id = id
         self.name = name
@@ -89,6 +97,8 @@ class Guild:
 
 
 class DiscordError(Exception):
+    __slots__ = ('message', 'error_type')
+
     def __init__(self, message: str, error_type: str):
         self.message = message
         self.error_type = error_type
@@ -100,6 +110,8 @@ class DiscordError(Exception):
 
 class GatewayError(Exception):
     """Error raised for Discord Gateway connection issues"""
+
+    __slots__ = ('message', 'code')
 
     def __init__(self, message: str, code=None):
         self.message = message
@@ -114,6 +126,17 @@ class GatewayError(Exception):
 
 # Discord API Client
 class DiscordClient:
+    __slots__ = (
+        'token',
+        'api_base',
+        'headers',
+        'session',
+        '_bot_user',
+        '_guilds',
+        '_channels',
+        'application_id',
+    )
+
     def __init__(self, token: str):
         if not token:
             raise ValueError(
@@ -486,6 +509,29 @@ class ConnectionState(Enum):
 
 
 class GatewayClient:
+    __slots__ = (
+        'token',
+        'intents',
+        'state',
+        'event_callbacks',
+        'gateway_url',
+        '_event_task',
+        '_heartbeat_task',
+        '_reconnect_task',
+        '_ws',
+        '_session_id',
+        '_sequence',
+        '_heartbeat_interval',
+        '_last_heartbeat_ack',
+        '_heartbeat_jitter',
+        '_reconnect_attempts',
+        '_max_reconnect_attempts',
+        '_close_code',
+        '_base_backoff',
+        '_max_backoff',
+        '_connection_lock',
+    )
+
     def __init__(self, token: str, intents: int):
         if not token:
             raise ValueError(

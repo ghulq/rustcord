@@ -93,19 +93,19 @@ class DiscordModel:
     """Base class for Discord data models"""
 
     _rust_type: ClassVar[Type] = None
+    __slots__ = ('_rust_type',)
 
     @classmethod
     def _from_rust(cls, rust_obj):
         """Convert a Rust object to a Python model"""
-        if rust_obj is None:
-            return
-        return cls(_rust_obj=rust_obj)
+        return rust_obj and cls(_rust_obj=rust_obj)
 
 
 class Message(DiscordModel):
     """Discord Message model"""
 
     _rust_type = _rust.Message
+    __slots__ = ('_rust_type', '_rust_obj')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -143,6 +143,7 @@ class User(DiscordModel):
     """Discord User model"""
 
     _rust_type = _rust.User
+    __slots__ = ('_rust_type', '_rust_obj')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -180,6 +181,7 @@ class Channel(DiscordModel):
     """Discord Channel model"""
 
     _rust_type = _rust.Channel
+    __slots__ = ('_rust_type', '_rust_obj')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -212,6 +214,7 @@ class Guild(DiscordModel):
     """Discord Guild model"""
 
     _rust_type = _rust.Guild
+    __slots__ = ('_rust_type', '_rust_obj')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         self._rust_obj = _rust_obj or self._rust_type(**kwargs)
@@ -239,6 +242,7 @@ class VoiceState(DiscordModel):
     """Discord Voice State model"""
 
     _rust_type = getattr(_rust, 'VoiceState', None)
+    __slots__ = ('_rust_type', '_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
@@ -335,6 +339,7 @@ class VoiceServerInfo(DiscordModel):
     """Discord Voice Server Information"""
 
     _rust_type = getattr(_rust, 'VoiceServerInfo', None)
+    __slots__ = ('_rust_type', '_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
@@ -375,6 +380,7 @@ class VoiceConnection(DiscordModel):
     """Discord Voice Connection"""
 
     _rust_type = getattr(_rust, 'VoiceConnection', None)
+    __slots__ = ('_rust_type', '_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
@@ -482,6 +488,7 @@ class AudioPlayer(DiscordModel):
     """Discord Audio Player"""
 
     _rust_type = getattr(_rust, 'AudioPlayer', None)
+    __slots__ = ('_rust_type', '_rust_obj', '_data')
 
     def __init__(self, *, _rust_obj=None, **kwargs):
         if _rust_obj:
@@ -589,6 +596,8 @@ class AudioPlayer(DiscordModel):
 class CommandOption:
     """Discord Application Command Option"""
 
+    __slots__ = ('type', 'name', 'description', 'required', 'choices', 'options')
+
     def __init__(
         self,
         type: CommandOptionType,
@@ -637,6 +646,15 @@ class CommandOption:
 class ApplicationCommand:
     """Discord Application Command (Slash Command)"""
 
+    __slots__ = (
+        'name',
+        'description',
+        'options',
+        'default_permission',
+        'guild_id',
+        'id',
+    )
+
     def __init__(
         self,
         name: str,
@@ -679,6 +697,8 @@ class ApplicationCommand:
 class Component:
     """Base class for all Discord UI components"""
 
+    __slots__ = ()
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to component API payload format"""
         raise NotImplementedError('Subclasses must implement to_dict()')
@@ -686,6 +706,8 @@ class Component:
 
 class Button(Component):
     """Discord UI Button component"""
+
+    __slots__ = ('style', 'label', 'custom_id', 'url', 'emoji', 'disabled')
 
     def __init__(
         self,
@@ -754,6 +776,8 @@ class Button(Component):
 class SelectOption:
     """Option for Discord select menu components"""
 
+    __slots__ = ('label', 'value', 'description', 'emoji', 'default')
+
     def __init__(
         self,
         label: str,
@@ -796,6 +820,16 @@ class SelectOption:
 
 class SelectMenu(Component):
     """Discord select menu component"""
+
+    __slots__ = (
+        'custom_id',
+        'options',
+        'placeholder',
+        'min_values',
+        'max_values',
+        'disabled',
+        'type',
+    )
 
     def __init__(
         self,
@@ -860,6 +894,8 @@ class SelectMenu(Component):
 class ActionRow(Component):
     """Discord Action Row component container"""
 
+    __slots__ = ('components',)
+
     def __init__(self, components: Optional[list[Component]] = None):
         """
         Initialize a new action row
@@ -883,6 +919,26 @@ class ActionRow(Component):
 
 class Interaction:
     """Discord Interaction model for slash commands and components"""
+
+    __slots__ = (
+        'id',
+        'application_id',
+        'type',
+        'data',
+        'guild_id',
+        'channel_id',
+        'member',
+        'user',
+        'token',
+        'version',
+        'message',
+        'command_name',
+        'command_id',
+        'options',
+        'component_type',
+        'custom_id',
+        'values',
+    )
 
     def __init__(self, data: dict[str, Any]):
         """

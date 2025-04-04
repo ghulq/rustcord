@@ -76,6 +76,20 @@ class Client:
     for interacting with the Discord API.
     """
 
+    __slots__ = (
+        'token',
+        'intents',
+        'shard_id',
+        'shard_count',
+        'rest_client',
+        'gateway_client',
+        'event_handlers',
+        '_gateway_url',
+        '_ready',
+        '_command_registrations',
+        '_is_sharded',
+    )
+
     def __init__(
         self,
         token: Optional[str] = None,
@@ -679,6 +693,8 @@ class Client:
 
 class InteractionResponse:
     """Helper class for creating Discord interaction responses"""
+
+    __slots__ = ()
 
     @staticmethod
     def message(content: str, ephemeral: bool = False) -> dict[str, Any]:

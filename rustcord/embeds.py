@@ -58,6 +58,8 @@ class Color:
 class EmbedField:
     """Represents a field in a Discord embed."""
 
+    __slots__ = ('name', 'value', 'inline')
+
     def __init__(self, name: str, value: str, inline: bool = False):
         """Initialize an embed field
 
@@ -94,6 +96,19 @@ class Embed:
         embed_dict = embed.to_dict()
         ```
     """
+
+    __slots__ = (
+        'title',
+        'description',
+        'color',
+        'url',
+        'timestamp',
+        '_fields',
+        '_author',
+        '_footer',
+        '_image',
+        '_thumbnail',
+    )
 
     def __init__(
         self,

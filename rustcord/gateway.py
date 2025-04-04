@@ -46,6 +46,8 @@ class Gateway:
     This is a Python wrapper around the Rust GatewayClient
     """
 
+    __slots__ = ('token', 'intents', '_gateway', '_event_handlers')
+
     def __init__(self, token: str, intents: int):
         """
         Initialize Gateway connection manager
@@ -69,7 +71,7 @@ class Gateway:
         logger.debug(f'Connecting to Gateway at {gateway_url}')
 
         # Register handlers for each event type
-        for event, handlers in self._event_handlers.items():
+        for event in self._event_handlers.keys():
 
             def create_handler(event_name):
                 async def handler(data):
