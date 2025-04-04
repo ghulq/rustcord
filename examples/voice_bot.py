@@ -5,14 +5,11 @@ Example Discord bot demonstrating voice features with RustCord
 
 import asyncio
 import logging
-import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
-import rustcord
 from rustcord import (
     Client,
     Intents,
-    ApplicationCommand,
     CommandOption,
     CommandOptionType,
     Interaction,
@@ -103,7 +100,7 @@ async def join_command(interaction: Interaction):
             # Attach the player to the connection
             await player.attach(connection)
 
-            await interaction.respond(f'Joined voice channel successfully!')
+            await interaction.respond('Joined voice channel successfully!')
         else:
             await interaction.respond(
                 'Failed to join voice channel. Please try again.', ephemeral=True

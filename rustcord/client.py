@@ -5,16 +5,13 @@ High-level Discord API client with Rust core
 import asyncio
 import logging
 import os
-from enum import IntFlag, auto
+from enum import IntFlag
 from typing import (
     Dict,
     Any,
     Optional,
     List,
     Callable,
-    Union,
-    TypeVar,
-    Generic,
     Awaitable,
     TYPE_CHECKING,
 )
@@ -25,8 +22,6 @@ from .models import (
     User,
     Channel,
     Guild,
-    VoiceState,
-    VoiceServerInfo,
     VoiceConnection,
     AudioPlayer,
     CommandOption,
@@ -34,10 +29,7 @@ from .models import (
     Interaction,
     InteractionType,
     InteractionResponseType,
-    CommandOptionType,
 )
-from .errors import DiscordError, GatewayError, HTTPError
-from .gateway import GatewayEvent, EventHandler
 
 # Handle forward references to prevent circular imports
 if TYPE_CHECKING:

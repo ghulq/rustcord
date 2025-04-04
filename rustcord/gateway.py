@@ -8,17 +8,13 @@ from enum import Enum
 from typing import (
     Dict,
     Any,
-    Optional,
     List,
     Callable,
     Union,
-    TypeVar,
-    Generic,
     Awaitable,
 )
 
 from . import _rust
-from .errors import GatewayError
 
 logger = logging.getLogger(__name__)
 

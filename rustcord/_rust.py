@@ -8,12 +8,11 @@ It serves as the implementation layer for Discord API interactions.
 import asyncio
 import json
 import logging
-import os
 import random
 import time
 import sys
 from enum import Enum
-from typing import Dict, Any, List, Callable, Optional
+from typing import Dict, Any, Callable, Optional
 
 # Set up logging first
 __version__ = '0.1.2-py'
@@ -470,7 +469,7 @@ class DiscordClient:
             json=response_data,
         )
 
-        logger.debug(f'Edited interaction response')
+        logger.debug('Edited interaction response')
 
 
 # Discord Gateway (WebSocket) client

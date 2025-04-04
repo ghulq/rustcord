@@ -8,13 +8,10 @@ import asyncio
 import logging
 from typing import Dict, Any
 
-import rustcord
 from rustcord import (
     Client,
     Intents,
     ApplicationCommand,
-    CommandOption,
-    CommandOptionType,
     Interaction,
     Button,
     ButtonStyle,

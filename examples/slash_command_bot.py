@@ -7,10 +7,9 @@ import os
 import sys
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 
-import rustcord
-from rustcord.client import Client, InteractionResponse
+from rustcord.client import Client
 from rustcord.models import CommandOption, CommandOptionType, Interaction
 
 # Configure logging
@@ -130,7 +129,7 @@ async def info_command(interaction: Interaction):
             embeds=[
                 {
                     'title': 'Bot Information',
-                    'description': f"I'm a Discord bot using RustCord",
+                    'description': "I'm a Discord bot using RustCord",
                     'color': 0x5865F2,
                     'fields': [
                         {

@@ -3,8 +3,8 @@ Discord API data models
 """
 
 import os
-from enum import Enum, IntEnum
-from typing import Optional, List, Dict, Any, ClassVar, Type, TypeVar, Generic, Union
+from enum import IntEnum
+from typing import Optional, List, Dict, Any, ClassVar, Type, TypeVar, Union
 
 from . import _rust
 

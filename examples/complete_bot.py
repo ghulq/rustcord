@@ -7,10 +7,10 @@ import os
 import sys
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 
 import rustcord
-from rustcord.client import Client, InteractionResponse, Intents
+from rustcord.client import Client, Intents
 from rustcord.models import CommandOption, CommandOptionType, Interaction
 
 # Configure logging
