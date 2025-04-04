@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="rustcord",
-    version="0.1.2",
+    version="0.1.3",
     author="ghulq",
     author_email="ghulq@mcbehub.de",
     description="A high-performance Discord API library with Rust core",
