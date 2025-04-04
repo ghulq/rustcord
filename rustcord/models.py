@@ -77,6 +77,8 @@ class PermissionType(IntEnum):
 class ApplicationCommandPermission:
     """Discord application command permission"""
 
+    __slots__ = ('id', 'type', 'permission')
+
     def __init__(self, id: str, type: PermissionType, permission: bool):
         """
         Initialize a new permission
@@ -625,6 +627,19 @@ class AudioPlayer(DiscordModel):
 class CommandOption:
     """Discord Application Command Option"""
 
+    __slots__ = (
+        'type',
+        'name',
+        'description',
+        'required',
+        'choices',
+        'options',
+        'autocomplete',
+        'min_value',
+        'max_value',
+        'channel_types',
+    )
+
     def __init__(
         self,
         type: CommandOptionType,
@@ -710,6 +725,18 @@ class CommandOption:
 
 class ApplicationCommand:
     """Discord Application Command (Slash Command)"""
+
+    __slots__ = (
+        'name',
+        'description',
+        'options',
+        'default_permission',
+        'default_member_permissions',
+        'dm_permission',
+        'guild_id',
+        'permissions',
+        'id',
+    )
 
     def __init__(
         self,
@@ -1028,6 +1055,7 @@ class Interaction:
         'component_type',
         'custom_id',
         'values',
+        'focused_option',
     )
 
     def __init__(self, data: dict[str, Any]):

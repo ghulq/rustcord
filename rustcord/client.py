@@ -447,7 +447,6 @@ class Client:
             return await self.rest_client.get_application_id()
         except Exception as e:
             logger.error(f'Failed to get application ID: {e}')
-            return None
 
     def command(
         self,
