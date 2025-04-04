@@ -1,192 +1,142 @@
-use std::fmt;
-
 use super::util;
 use pyo3::prelude::*;
 use serde::{
     Deserialize, Deserializer,
     de::{MapAccess, Visitor},
 };
+use std::fmt;
 
-/// Voice State model for Discord voice connections
-#[pyclass]
-#[derive(Clone, Deserialize)]
-pub struct VoiceState {
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub guild_id: Option<String>,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub channel_id: Option<String>,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub user_id: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub session_id: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub deaf: bool,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub mute: bool,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub self_deaf: bool,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub self_mute: bool,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub self_stream: bool,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub self_video: bool,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub suppress: bool,
-}
+util::auto_py_constructor! {
+    /// Voice State model for Discord voice connections
+    #[pyclass]
+    #[derive(Clone, Deserialize)]
+    pub struct VoiceState {
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub user_id: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub session_id: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub guild_id: Option<String>,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub channel_id: Option<String>,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub deaf: bool,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub mute: bool,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub self_deaf: bool,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub self_mute: bool,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub self_stream: bool,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub self_video: bool,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub suppress: bool,
+    }
 
-#[pymethods]
-impl VoiceState {
-    #[new]
-    pub const fn new(
-        user_id: String,
-        session_id: String,
-        guild_id: Option<String>,
-        channel_id: Option<String>,
-        deaf: bool,
-        mute: bool,
-        self_deaf: bool,
-        self_mute: bool,
-        self_stream: bool,
-        self_video: bool,
-        suppress: bool,
-    ) -> Self {
-        Self {
-            guild_id,
-            channel_id,
-            user_id,
-            session_id,
-            deaf,
-            mute,
-            self_deaf,
-            self_mute,
-            self_stream,
-            self_video,
-            suppress,
+    #[pymethods]
+    impl VoiceState {
+        pub fn __str__(&self) -> String {
+            format!(
+                "<VoiceState user_id={} channel_id={}>",
+                self.user_id,
+                self.channel_id.as_deref().unwrap_or("None"),
+            )
+        }
+
+        pub fn __repr__(&self) -> String {
+            format!(
+                "VoiceState(user_id='{}', session_id='{}', channel_id={}, guild_id={})",
+                self.user_id,
+                self.session_id,
+                match &self.channel_id {
+                    Some(id) => format!("'{id}'"),
+                    None => "None".to_string(),
+                },
+                match &self.guild_id {
+                    Some(id) => format!("'{id}'"),
+                    None => "None".to_string(),
+                }
+            )
         }
     }
-
-    pub fn __str__(&self) -> String {
-        format!(
-            "<VoiceState user_id={} channel_id={}>",
-            self.user_id,
-            self.channel_id.as_deref().unwrap_or("None"),
-        )
-    }
-
-    pub fn __repr__(&self) -> String {
-        format!(
-            "VoiceState(user_id='{}', session_id='{}', channel_id={}, guild_id={})",
-            self.user_id,
-            self.session_id,
-            match &self.channel_id {
-                Some(id) => format!("'{id}'"),
-                None => "None".to_string(),
-            },
-            match &self.guild_id {
-                Some(id) => format!("'{id}'"),
-                None => "None".to_string(),
-            }
-        )
-    }
 }
 
-/// Voice Server information from Discord
-#[pyclass]
-#[derive(Clone, Deserialize)]
-pub struct VoiceServerInfo {
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub token: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub guild_id: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub endpoint: String,
-}
+util::auto_py_constructor! {
+    /// Voice Server information from Discord
+    #[pyclass]
+    #[derive(Clone, Deserialize)]
+    pub struct VoiceServerInfo {
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub token: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub guild_id: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub endpoint: String,
+    }
 
-#[pymethods]
-impl VoiceServerInfo {
-    #[new]
-    pub const fn new(token: String, guild_id: String, endpoint: String) -> Self {
-        Self {
-            token,
-            guild_id,
-            endpoint,
+    #[pymethods]
+    impl VoiceServerInfo {
+        pub fn __str__(&self) -> String {
+            format!(
+                "<VoiceServerInfo guild_id={} endpoint={}>",
+                self.guild_id, self.endpoint
+            )
+        }
+
+        pub fn __repr__(&self) -> String {
+            format!(
+                "VoiceServerInfo(token='{}', guild_id='{}', endpoint='{}')",
+                self.token, self.guild_id, self.endpoint
+            )
         }
     }
-
-    pub fn __str__(&self) -> String {
-        format!(
-            "<VoiceServerInfo guild_id={} endpoint={}>",
-            self.guild_id, self.endpoint
-        )
-    }
-
-    pub fn __repr__(&self) -> String {
-        format!(
-            "VoiceServerInfo(token='{}', guild_id='{}', endpoint='{}')",
-            self.token, self.guild_id, self.endpoint
-        )
-    }
 }
 
-/// Discord Message model
-#[pyclass]
-#[derive(Clone, Default)]
-pub struct Message {
-    #[pyo3(get)]
-    pub id: String,
-    #[pyo3(get)]
-    pub channel_id: String,
-    #[pyo3(get)]
-    pub content: String,
-    #[pyo3(get)]
-    pub author_id: String,
-    #[pyo3(get)]
-    pub author_username: String,
-}
+util::auto_py_constructor! {
+    /// Discord Message model
+    #[pyclass]
+    #[derive(Clone, Default)]
+    pub struct Message {
+        #[pyo3(get)]
+        pub id: String,
+        #[pyo3(get)]
+        pub channel_id: String,
+        #[pyo3(get)]
+        pub content: String,
+        #[pyo3(get)]
+        pub author_id: String,
+        #[pyo3(get)]
+        pub author_username: String,
+    }
 
-#[pymethods]
-impl Message {
-    #[new]
-    pub const fn new(
-        id: String,
-        channel_id: String,
-        content: String,
-        author_id: String,
-        author_username: String,
-    ) -> Self {
-        Self {
-            id,
-            channel_id,
-            content,
-            author_id,
-            author_username,
+    #[pymethods]
+    impl Message {
+        pub fn __str__(&self) -> String {
+            format!("<Message id={} content={}>", self.id, self.content)
         }
-    }
 
-    pub fn __str__(&self) -> String {
-        format!("<Message id={} content={}>", self.id, self.content)
-    }
-
-    pub fn __repr__(&self) -> String {
-        format!(
-            "Message(id='{}', channel_id='{}', content='{}', author_id='{}', author_username='{}')",
-            self.id, self.channel_id, self.content, self.author_id, self.author_username
-        )
+        pub fn __repr__(&self) -> String {
+            format!(
+                "Message(id='{}', channel_id='{}', content='{}', author_id='{}', author_username='{}')",
+                self.id, self.channel_id, self.content, self.author_id, self.author_username
+            )
+        }
     }
 }
 
@@ -226,22 +176,22 @@ impl<'de> Visitor<'de> for MessageVisitor {
         while let Some(key) = map.next_key::<String>()? {
             match key.as_str() {
                 "id" => {
-                    if let Ok(Some(new_id)) = map.next_value::<Option<String>>() {
+                    if let Ok(new_id) = map.next_value::<String>() {
                         message.id = new_id;
                     }
                 }
                 "channel_id" => {
-                    if let Ok(Some(new_channel_id)) = map.next_value::<Option<String>>() {
+                    if let Ok(new_channel_id) = map.next_value::<String>() {
                         message.channel_id = new_channel_id;
                     }
                 }
                 "content" => {
-                    if let Ok(Some(new_content)) = map.next_value::<Option<String>>() {
+                    if let Ok(new_content) = map.next_value::<String>() {
                         message.content = new_content;
                     }
                 }
                 "author" => {
-                    if let Ok(Some(a)) = map.next_value::<Option<MessageAuthorIntermediate>>() {
+                    if let Ok(a) = map.next_value::<MessageAuthorIntermediate>() {
                         message.author_id = a.id;
                         message.author_username = a.username;
                     }
@@ -256,93 +206,77 @@ impl<'de> Visitor<'de> for MessageVisitor {
     }
 }
 
-/// Discord User model
-#[pyclass]
-#[derive(Clone, Deserialize)]
-pub struct User {
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub id: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub username: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub discriminator: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub bot: bool,
-}
+util::auto_py_constructor! {
+    /// Discord User model
+    #[pyclass]
+    #[derive(Clone, Deserialize)]
+    pub struct User {
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub id: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub username: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub discriminator: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub bot: bool,
+    }
 
-#[pymethods]
-impl User {
-    #[new]
-    pub const fn new(id: String, username: String, discriminator: String, bot: bool) -> Self {
-        Self {
-            id,
-            username,
-            discriminator,
-            bot,
+    #[pymethods]
+    impl User {
+        pub fn __str__(&self) -> String {
+            format!("<User id={} username={}>", self.id, self.username)
+        }
+
+        pub fn __repr__(&self) -> String {
+            format!(
+                "User(id='{}', username='{}', discriminator='{}', bot={})",
+                self.id, self.username, self.discriminator, self.bot
+            )
         }
     }
-
-    pub fn __str__(&self) -> String {
-        format!("<User id={} username={}>", self.id, self.username)
-    }
-
-    pub fn __repr__(&self) -> String {
-        format!(
-            "User(id='{}', username='{}', discriminator='{}', bot={})",
-            self.id, self.username, self.discriminator, self.bot
-        )
-    }
 }
 
-/// Discord Channel model
-#[pyclass]
-#[derive(Clone, Deserialize)]
-pub struct Channel {
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub id: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub name: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub channel_type: u8,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub guild_id: Option<String>,
-}
+util::auto_py_constructor! {
+    /// Discord Channel model
+    #[pyclass]
+    #[derive(Clone, Deserialize)]
+    pub struct Channel {
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub id: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub name: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub channel_type: u8,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub guild_id: Option<String>,
+    }
 
-#[pymethods]
-impl Channel {
-    #[new]
-    pub const fn new(id: String, name: String, channel_type: u8, guild_id: Option<String>) -> Self {
-        Self {
-            id,
-            name,
-            channel_type,
-            guild_id,
+    #[pymethods]
+    impl Channel {
+        pub fn __str__(&self) -> String {
+            format!("<Channel id={} name={}>", self.id, self.name)
         }
-    }
 
-    pub fn __str__(&self) -> String {
-        format!("<Channel id={} name={}>", self.id, self.name)
-    }
-
-    pub fn __repr__(&self) -> String {
-        format!(
-            "Channel(id='{}', name='{}', channel_type={}, guild_id={})",
-            self.id,
-            self.name,
-            self.channel_type,
-            match &self.guild_id {
-                Some(id) => format!("'{id}'"),
-                None => "None".to_string(),
-            }
-        )
+        pub fn __repr__(&self) -> String {
+            format!(
+                "Channel(id='{}', name='{}', channel_type={}, guild_id={})",
+                self.id,
+                self.name,
+                self.channel_type,
+                match &self.guild_id {
+                    Some(id) => format!("'{id}'"),
+                    None => "None".to_string(),
+                }
+            )
+        }
     }
 }
 
@@ -529,36 +463,33 @@ impl AudioPlayer {
     }
 }
 
-/// Discord Guild (Server) model
-#[pyclass]
-#[derive(Clone, Deserialize)]
-pub struct Guild {
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub id: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub name: String,
-    #[pyo3(get)]
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    pub owner_id: String,
-}
-
-#[pymethods]
-impl Guild {
-    #[new]
-    pub const fn new(id: String, name: String, owner_id: String) -> Self {
-        Self { id, name, owner_id }
+util::auto_py_constructor! {
+    /// Discord Guild (Server) model
+    #[pyclass]
+    #[derive(Clone, Deserialize)]
+    pub struct Guild {
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub id: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub name: String,
+        #[pyo3(get)]
+        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub owner_id: String,
     }
 
-    pub fn __str__(&self) -> String {
-        format!("<Guild id={} name={}>", self.id, self.name)
-    }
+    #[pymethods]
+    impl Guild {
+        pub fn __str__(&self) -> String {
+            format!("<Guild id={} name={}>", self.id, self.name)
+        }
 
-    pub fn __repr__(&self) -> String {
-        format!(
-            "Guild(id='{}', name='{}', owner_id='{}')",
-            self.id, self.name, self.owner_id
-        )
+        pub fn __repr__(&self) -> String {
+            format!(
+                "Guild(id='{}', name='{}', owner_id='{}')",
+                self.id, self.name, self.owner_id
+            )
+        }
     }
 }

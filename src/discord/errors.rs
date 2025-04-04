@@ -1,4 +1,5 @@
 use pyo3::{PyErr, exceptions::PyRuntimeError, prelude::*};
+use super::util;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -43,26 +44,20 @@ impl DiscordError {
     }
 }
 
-/// Python-exposed Discord API error type
-#[pyclass]
-pub struct DiscordErrorPy {
-    #[pyo3(get)]
-    pub message: String,
-    #[pyo3(get)]
-    pub error_type: String,
-}
-
-#[pymethods]
-impl DiscordErrorPy {
-    #[new]
-    pub const fn new(message: String, error_type: String) -> Self {
-        Self {
-            message,
-            error_type,
-        }
+util::auto_py_constructor! {
+    /// Python-exposed Discord API error type
+    #[pyclass]
+    pub struct DiscordErrorPy {
+        #[pyo3(get)]
+        pub message: String,
+        #[pyo3(get)]
+        pub error_type: String,
     }
 
-    pub fn __str__(&self) -> String {
-        format!("DiscordError[{}]: {}", self.error_type, self.message)
+    #[pymethods]
+    impl DiscordErrorPy {
+        pub fn __str__(&self) -> String {
+            format!("DiscordError[{}]: {}", self.error_type, self.message)
+        }
     }
 }
