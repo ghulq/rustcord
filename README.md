@@ -16,6 +16,8 @@ RustCord is a high-performance asynchronous Python library for interacting with 
 - Event-based architecture for handling Discord events
 - Slash command support with command registration and interaction responses
 - Support for ephemeral responses, embeds, and deferred responses
+- Support for autocomplete responses
+- Support for permission based interaction commands
 - Minimal memory footprint and CPU usage
 - Clean and intuitive Python API
 
@@ -314,6 +316,8 @@ The library currently supports:
 - Ephemeral Responses (responses only visible to the command user)
 - Rich Embeds with fields, images, colors, and formatting
 - Deferred Responses (for commands that take longer to process)
+- Autocompletion for Interaction Options
+- Permission based Interaction Commands
 - Voice Channels support:
   - Joining and leaving voice channels
   - Audio playback from files
@@ -324,7 +328,6 @@ Coming soon:
 
 - Type-safe API interfaces with Rust validation
 - Modal Forms
-- Auto-complete interactions
 - Voice recording and streaming
 
 ## Documentation

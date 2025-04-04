@@ -163,7 +163,12 @@ class DiscordClient:
         """Ensure we have an active HTTP session"""
         if self.session is None or self.session.closed:
             self.session = aiohttp.ClientSession()
-
+    
+    async def close(self):
+        """Close the HTTP session and clean up resources"""
+        if self.session and not self.session.closed:
+            await self.session.close()
+            
     async def _api_request(self, method: str, endpoint: str, **kwargs):
         """Make an API request to Discord"""
         if not REAL_API:
@@ -988,7 +993,29 @@ class GatewayClient:
 
     async def disconnect(self):
         """Disconnect from the Gateway"""
-
+        logger.info("Disconnecting from Gateway")
+        previous_state = self.state
+        self.state = ConnectionState.DISCONNECTED
+        
+        # Cancel all tasks
+        for task in (self._heartbeat_task, self._event_task, self._reconnect_task):
+            if task and not task.done():
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+        
+        # Close the websocket connection
+        if self._ws:
+            try:
+                # Only use 1000 (normal closure) if this was an intentional disconnect
+                close_code = 1000 if previous_state != ConnectionState.DISCONNECTED else 4000
+                await self._ws.close(code=close_code)
+            except:
+                pass  # Ignore errors when closing
+            self._ws = None
+        
     async def connect_sharded(self, gateway_url: str, shard_id: int, shard_count: int):
         """Connect to Discord Gateway with sharding"""
         logger.info(
@@ -1184,31 +1211,4 @@ class GatewayClient:
         """Create an audio player for voice playback"""
         # In this Python implementation we don't have a full audio implementation
         # This would be properly implemented in the Rust version
-        logger.warning('Audio players are not fully implemented in the Python version')
-
-    async def disconnect(self):
-        """Disconnect from the Gateway"""
-        logger.info('Disconnecting from Gateway')
-        previous_state = self.state
-        self.state = ConnectionState.DISCONNECTED
-
-        # Cancel all tasks
-        for task in [self._heartbeat_task, self._event_task, self._reconnect_task]:
-            if task and not task.done():
-                task.cancel()
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    pass
-
-        # Close the websocket connection
-        if self._ws:
-            try:
-                # Only use 1000 (normal closure) if this was an intentional disconnect
-                close_code = (
-                    1000 if previous_state != ConnectionState.DISCONNECTED else 4000
-                )
-                await self._ws.close(code=close_code)
-            except:
-                pass  # Ignore errors when closing
-            self._ws = None
+        logger.warning("Audio players are not fully implemented in the Python version")
