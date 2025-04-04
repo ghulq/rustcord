@@ -15,7 +15,7 @@ macro_rules! py_getter_class {
         $struct_vis:vis struct $struct_name:ident {
             $(
                 $(#[$struct_attr_meta:meta])*
-                pub $struct_attr_name:ident: $struct_attr_ty:ty,
+                $struct_attr_name_vis:vis $struct_attr_name:ident: $struct_attr_ty:ty,
             )*
         }
 
@@ -31,7 +31,7 @@ macro_rules! py_getter_class {
             $(
                 $(#[$struct_attr_meta])*
                 #[pyo3(get)]
-                pub $struct_attr_name: $struct_attr_ty,
+                $struct_attr_name_vis $struct_attr_name: $struct_attr_ty,
             )*
         }
 
