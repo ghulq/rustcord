@@ -37,7 +37,5 @@ class ValidationError(DiscordError):
     """Error for invalid API requests"""
     def __init__(self, message: str, field: Optional[str] = None):
         self.field = field
-        msg = f"Validation error: {message}"
-        if field:
-            msg = f"Validation error in '{field}': {message}"
+        msg = f"Validation error{f' in \'{field}\'' if field else ''}: {message}"
         super().__init__(msg)

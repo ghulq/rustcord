@@ -759,8 +759,7 @@ class GatewayClient:
     async def _dispatch_event(self, event_name: str, event_data: Dict[str, Any]):
         """Dispatch event to callback with error handling"""
         try:
-            callback = self.event_callbacks.get(event_name)
-            if callback:
+            if callback := self.event_callbacks.get(event_name):
                 result = callback(event_data)
                 # Handle if it's a coroutine
                 if asyncio.iscoroutine(result):

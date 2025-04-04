@@ -91,10 +91,7 @@ class Message(DiscordModel):
     _rust_type = _rust.Message
     
     def __init__(self, *, _rust_obj=None, **kwargs):
-        if _rust_obj:
-            self._rust_obj = _rust_obj
-        else:
-            self._rust_obj = self._rust_type(**kwargs)
+        self._rust_obj = _rust_obj or self._rust_type(**kwargs)
     
     @property
     def id(self) -> str:
@@ -130,10 +127,7 @@ class User(DiscordModel):
     _rust_type = _rust.User
     
     def __init__(self, *, _rust_obj=None, **kwargs):
-        if _rust_obj:
-            self._rust_obj = _rust_obj
-        else:
-            self._rust_obj = self._rust_type(**kwargs)
+        self._rust_obj = _rust_obj or self._rust_type(**kwargs)
     
     @property
     def id(self) -> str:
@@ -169,10 +163,7 @@ class Channel(DiscordModel):
     _rust_type = _rust.Channel
     
     def __init__(self, *, _rust_obj=None, **kwargs):
-        if _rust_obj:
-            self._rust_obj = _rust_obj
-        else:
-            self._rust_obj = self._rust_type(**kwargs)
+        self._rust_obj = _rust_obj or self._rust_type(**kwargs)
     
     @property
     def id(self) -> str:
@@ -203,10 +194,7 @@ class Guild(DiscordModel):
     _rust_type = _rust.Guild
     
     def __init__(self, *, _rust_obj=None, **kwargs):
-        if _rust_obj:
-            self._rust_obj = _rust_obj
-        else:
-            self._rust_obj = self._rust_type(**kwargs)
+        self._rust_obj = _rust_obj or self._rust_type(**kwargs)
     
     @property
     def id(self) -> str:
@@ -931,8 +919,7 @@ class Interaction:
         Returns:
             Option value if found, default otherwise
         """
-        option = self.get_option(name)
-        if option:
+        if option := self.get_option(name):
             return option.get("value", default)
         return default
     

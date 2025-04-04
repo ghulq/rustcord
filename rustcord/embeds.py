@@ -329,34 +329,28 @@ def create_embed(title: Optional[str] = None, description: Optional[str] = None,
     embed = Embed(title=title, description=description, color=color)
     
     # Apply additional attributes if provided
-    url = kwargs.get("url")
-    if url:
+    if url := kwargs.get("url"):
         embed.set_url(url)
         
-    timestamp = kwargs.get("timestamp")
-    if timestamp:
+    if timestamp := kwargs.get("timestamp"):
         embed.set_timestamp(timestamp)
         
     # Author
-    author_name = kwargs.get("author_name")
-    if author_name:
+    if author_name := kwargs.get("author_name"):
         author_url = kwargs.get("author_url")
         author_icon = kwargs.get("author_icon_url")
         embed.set_author(author_name, author_url, author_icon)
         
     # Footer
-    footer_text = kwargs.get("footer_text")
-    if footer_text:
+    if footer_text := kwargs.get("footer_text"):
         footer_icon = kwargs.get("footer_icon_url")
         embed.set_footer(footer_text, footer_icon)
         
     # Images
-    thumbnail_url = kwargs.get("thumbnail_url")
-    if thumbnail_url:
+    if thumbnail_url := kwargs.get("thumbnail_url"):
         embed.set_thumbnail(thumbnail_url)
-        
-    image_url = kwargs.get("image_url")
-    if image_url:
+    
+    if image_url := kwargs.get("image_url"):
         embed.set_image(image_url)
         
     # Fields
