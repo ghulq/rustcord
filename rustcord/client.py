@@ -260,11 +260,11 @@ class Client:
         """Disconnect from Discord Gateway and clean up resources"""
         await self.gateway_client.disconnect()
         self._ready.clear()
-        
+
         # Close HTTP session to prevent resource leaks
         if hasattr(self.rest_client, 'close'):
             await self.rest_client.close()
-    
+
     async def start(self):
         """Start the Discord client and connect to Gateway"""
         await self.connect()
@@ -446,12 +446,18 @@ class Client:
         try:
             return await self.rest_client.get_application_id()
         except Exception as e:
-            logger.error(f"Failed to get application ID: {e}")
+            logger.error(f'Failed to get application ID: {e}')
             return None
-            
-    def command(self, name: str, description: str, options: Optional[List[CommandOption]] = None, 
-               guild_id: Optional[str] = None, default_member_permissions: Optional[str] = None,
-               dm_permission: bool = True):
+
+    def command(
+        self,
+        name: str,
+        description: str,
+        options: Optional[list[CommandOption]] = None,
+        guild_id: Optional[str] = None,
+        default_member_permissions: Optional[str] = None,
+        dm_permission: bool = True,
+    ):
         """
         Decorator to register a slash command handler
 
@@ -472,21 +478,21 @@ class Client:
         def decorator(func):
             # Store command info for future reference
             func._command_info = {
-                "name": name,
-                "description": description,
-                "guild_id": guild_id
+                'name': name,
+                'description': description,
+                'guild_id': guild_id,
             }
-            
+
             # Create and store a mapping of option handlers for autocomplete
             if not hasattr(self, '_autocomplete_handlers'):
                 self._autocomplete_handlers = {}
-                
+
             autocomplete_key = f"{guild_id or 'global'}:{name}"
             if autocomplete_key not in self._autocomplete_handlers:
                 self._autocomplete_handlers[autocomplete_key] = {}
-                
-            @self.event("interaction")
-            async def interaction_handler(data: Dict[str, Any]):
+
+            @self.event('interaction')
+            async def interaction_handler(data: dict[str, Any]):
                 interaction = Interaction(data)
 
                 # Check if this is a slash command interaction with the right name
@@ -495,17 +501,19 @@ class Client:
                     and interaction.command_name == name
                 ):
                     await func(interaction)
-                
+
                 # Handle autocomplete interactions for this command
-                elif (interaction.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE and
-                      interaction.command_name == name and
-                      interaction.focused_option and
-                      interaction.focused_option.get('name') in self._autocomplete_handlers[autocomplete_key]):
-                    
+                elif (
+                    interaction.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE
+                    and interaction.command_name == name
+                    and interaction.focused_option
+                    and interaction.focused_option.get('name')
+                    in self._autocomplete_handlers[autocomplete_key]
+                ):
                     option_name = interaction.focused_option.get('name')
                     handler = self._autocomplete_handlers[autocomplete_key][option_name]
                     await handler(interaction)
-                    
+
             # Register the command with Discord
             async def register_command():
                 # Wait for client to be ready
@@ -517,7 +525,7 @@ class Client:
                     options=options,
                     guild_id=guild_id,
                     default_member_permissions=default_member_permissions,
-                    dm_permission=dm_permission
+                    dm_permission=dm_permission,
                 )
 
                 if guild_id:
@@ -527,70 +535,78 @@ class Client:
 
             # Store the registration task to be run after the client starts
             self._command_registrations.append(register_command)
-            
+
             # Return function with added methods for permission and autocomplete
-            func.autocomplete = lambda option_name: self._autocomplete_option(func, option_name, autocomplete_key)
+            func.autocomplete = lambda option_name: self._autocomplete_option(
+                func, option_name, autocomplete_key
+            )
             func.permission = lambda **kwargs: self._command_permission(func, **kwargs)
-            
+
             return func
 
         return decorator
-        
-    def _autocomplete_option(self, command_func, option_name: str, autocomplete_key: str):
+
+    def _autocomplete_option(
+        self, command_func, option_name: str, autocomplete_key: str
+    ):
         """
         Internal method to handle adding autocomplete handlers to commands
-        
+
         This method is not intended to be called directly, but is used through
         the .autocomplete method added to command functions
         """
+
         def wrapper(handler_func):
             # Register this handler for this option for this command
             self._autocomplete_handlers[autocomplete_key][option_name] = handler_func
             return handler_func
+
         return wrapper
-        
+
     def permission(self, **kwargs):
         """
         Decorator to add permission requirements to a command
-        
+
         This is a shorthand for setting default_member_permissions on commands
-        
+
         Example:
             @client.command("admin", "Admin-only command")
             @client.permission(administrator=True)
             async def admin_command(interaction):
                 await interaction.respond("This is an admin-only command!")
-                
+
         Args:
             **kwargs: Permission flags to set (administrator, manage_messages, etc.)
         """
+
         def decorator(func):
             return self._command_permission(func, **kwargs)
+
         return decorator
-    
+
     def _command_permission(self, command_func, **kwargs):
         """
         Internal method to handle command permissions
-        
+
         This method is not intended to be called directly, but is used through
         the .permission method added to command functions
         """
         # Store permissions in function for future use
         if not hasattr(command_func, '_permissions'):
             command_func._permissions = {}
-            
+
         # Process permission kwargs
         for perm_name, perm_value in kwargs.items():
             command_func._permissions[perm_name] = perm_value
-            
+
             # Special handling for common permissions
             if perm_name == 'administrator' and perm_value:
                 # Administrator permission is 0x8
                 command_func._permissions['_default_member_permissions'] = '8'
-                
+
         return command_func
-        
-    async def handle_interaction(self, interaction_data: Dict[str, Any]) -> None:
+
+    async def handle_interaction(self, interaction_data: dict[str, Any]) -> None:
         """
         Handle an incoming interaction
 
@@ -614,33 +630,40 @@ class Client:
                 interaction.token,
                 {'type': InteractionResponseType.PONG},
             )
-            
+
         # If we have specific handlers for autocomplete
-        if (interaction.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE and 
-            hasattr(self, '_autocomplete_handlers') and
-            interaction.command_name and
-            interaction.focused_option):
-            
+        if (
+            interaction.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE
+            and hasattr(self, '_autocomplete_handlers')
+            and interaction.command_name
+            and interaction.focused_option
+        ):
             # Generate the key for handler lookup
             guild_id = interaction.guild_id or 'global'
             command_name = interaction.command_name
-            autocomplete_key = f"{guild_id}:{command_name}"
-            
+            autocomplete_key = f'{guild_id}:{command_name}'
+
             # Check if we have a handler for this command and option
-            if (autocomplete_key in self._autocomplete_handlers and
-                interaction.focused_option.get('name') in self._autocomplete_handlers[autocomplete_key]):
-                
-                logger.debug(f"Handling autocomplete for {command_name}, option {interaction.focused_option.get('name')}")
+            if (
+                autocomplete_key in self._autocomplete_handlers
+                and interaction.focused_option.get('name')
+                in self._autocomplete_handlers[autocomplete_key]
+            ):
+                logger.debug(
+                    f"Handling autocomplete for {command_name}, option {interaction.focused_option.get('name')}"
+                )
                 option_name = interaction.focused_option.get('name')
                 handler = self._autocomplete_handlers[autocomplete_key][option_name]
                 try:
                     await handler(interaction)
                 except Exception as e:
-                    logger.error(f"Error in autocomplete handler: {e}")
+                    logger.error(f'Error in autocomplete handler: {e}')
                     # Send empty choices as fallback
                     await interaction.respond_autocomplete([])
-            
-    async def create_interaction_response(self, interaction_id: str, interaction_token: str, response_data: Dict[str, Any]) -> None:
+
+    async def create_interaction_response(
+        self, interaction_id: str, interaction_token: str, response_data: dict[str, Any]
+    ) -> None:
         """
         Create a response to an interaction
 

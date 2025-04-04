@@ -64,20 +64,23 @@ class CommandOptionType(IntEnum):
     MENTIONABLE = 9
     NUMBER = 10
     ATTACHMENT = 11
-    
+
+
 class PermissionType(IntEnum):
     """Discord application command permission types"""
+
     ROLE = 1
     USER = 2
     CHANNEL = 3
-    
+
+
 class ApplicationCommandPermission:
     """Discord application command permission"""
-    
+
     def __init__(self, id: str, type: PermissionType, permission: bool):
         """
         Initialize a new permission
-        
+
         Args:
             id: ID of the role, user, or channel
             type: Type of permission target
@@ -86,15 +89,12 @@ class ApplicationCommandPermission:
         self.id = id
         self.type = type
         self.permission = permission
-        
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to API payload format"""
-        return {
-            "id": self.id,
-            "type": int(self.type),
-            "permission": self.permission
-        }
-    
+        return {'id': self.id, 'type': int(self.type), 'permission': self.permission}
+
+
 class ComponentType(IntEnum):
     """Discord UI component types"""
 
@@ -624,18 +624,20 @@ class AudioPlayer(DiscordModel):
 
 class CommandOption:
     """Discord Application Command Option"""
-    
-    def __init__(self, 
-                 type: CommandOptionType,
-                 name: str,
-                 description: str,
-                 required: bool = False,
-                 choices: Optional[List[Dict[str, Union[str, int, float]]]] = None,
-                 options: Optional[List['CommandOption']] = None,
-                 autocomplete: bool = False,
-                 min_value: Optional[Union[int, float]] = None,
-                 max_value: Optional[Union[int, float]] = None,
-                 channel_types: Optional[List[ChannelType]] = None):
+
+    def __init__(
+        self,
+        type: CommandOptionType,
+        name: str,
+        description: str,
+        required: bool = False,
+        choices: Optional[list[dict[str, Union[str, int, float]]]] = None,
+        options: Optional[list['CommandOption']] = None,
+        autocomplete: bool = False,
+        min_value: Optional[Union[int, float]] = None,
+        max_value: Optional[Union[int, float]] = None,
+        channel_types: Optional[list[ChannelType]] = None,
+    ):
         """
         Initialize a new command option
 
@@ -661,8 +663,8 @@ class CommandOption:
         self.min_value = min_value
         self.max_value = max_value
         self.channel_types = channel_types or []
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to API payload format"""
         data = {
             'type': int(self.type),
@@ -670,36 +672,36 @@ class CommandOption:
             'description': self.description,
             'required': self.required,
         }
-        
+
         # Add autocomplete if enabled (only for STRING, INTEGER, or NUMBER types)
         if self.autocomplete and self.type in (
-            CommandOptionType.STRING, 
-            CommandOptionType.INTEGER, 
-            CommandOptionType.NUMBER
+            CommandOptionType.STRING,
+            CommandOptionType.INTEGER,
+            CommandOptionType.NUMBER,
         ):
-            data["autocomplete"] = True
-            
+            data['autocomplete'] = True
+
         # Choices and autocomplete are mutually exclusive
         if self.choices and not self.autocomplete:
-            data["choices"] = self.choices
-            
+            data['choices'] = self.choices
+
         # Add min/max values for numeric types
         if self.min_value is not None and self.type in (
-            CommandOptionType.INTEGER, 
-            CommandOptionType.NUMBER
+            CommandOptionType.INTEGER,
+            CommandOptionType.NUMBER,
         ):
-            data["min_value"] = self.min_value
-            
+            data['min_value'] = self.min_value
+
         if self.max_value is not None and self.type in (
-            CommandOptionType.INTEGER, 
-            CommandOptionType.NUMBER
+            CommandOptionType.INTEGER,
+            CommandOptionType.NUMBER,
         ):
-            data["max_value"] = self.max_value
-            
+            data['max_value'] = self.max_value
+
         # Add channel types for CHANNEL type options
         if self.channel_types and self.type == CommandOptionType.CHANNEL:
-            data["channel_types"] = [int(t) for t in self.channel_types]
-            
+            data['channel_types'] = [int(t) for t in self.channel_types]
+
         if self.options:
             data['options'] = [opt.to_dict() for opt in self.options]
 
@@ -708,16 +710,18 @@ class CommandOption:
 
 class ApplicationCommand:
     """Discord Application Command (Slash Command)"""
-    
-    def __init__(self, 
-                 name: str,
-                 description: str,
-                 options: Optional[List[CommandOption]] = None,
-                 default_permission: bool = True,
-                 default_member_permissions: Optional[str] = None,
-                 dm_permission: bool = True,
-                 guild_id: Optional[str] = None,
-                 permissions: Optional[List[ApplicationCommandPermission]] = None):
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        options: Optional[list[CommandOption]] = None,
+        default_permission: bool = True,
+        default_member_permissions: Optional[str] = None,
+        dm_permission: bool = True,
+        guild_id: Optional[str] = None,
+        permissions: Optional[list[ApplicationCommandPermission]] = None,
+    ):
         """
         Initialize a new application command
 
@@ -744,39 +748,39 @@ class ApplicationCommand:
     def to_dict(self) -> dict[str, Any]:
         """Convert to API payload format"""
         data = {
-            "name": self.name,
-            "description": self.description,
+            'name': self.name,
+            'description': self.description,
         }
-        
+
         # For backwards compatibility, still include default_permission
-        data["default_permission"] = self.default_permission
-        
+        data['default_permission'] = self.default_permission
+
         # New permission system
         if self.default_member_permissions is not None:
-            data["default_member_permissions"] = self.default_member_permissions
-            
+            data['default_member_permissions'] = self.default_member_permissions
+
         # DM permissions, only include if False as True is the default
         if not self.dm_permission:
-            data["dm_permission"] = False
-            
+            data['dm_permission'] = False
+
         if self.options:
             data['options'] = [opt.to_dict() for opt in self.options]
 
         return data
-        
-    def get_permissions_payload(self) -> Dict[str, Any]:
+
+    def get_permissions_payload(self) -> dict[str, Any]:
         """Get the permissions payload for this command"""
         if not self.id:
-            raise ValueError("Command must be registered before setting permissions")
-            
+            raise ValueError('Command must be registered before setting permissions')
+
         if not self.guild_id:
-            raise ValueError("Permissions can only be set for guild commands")
-            
+            raise ValueError('Permissions can only be set for guild commands')
+
         return {
-            "id": self.id,
-            "application_id": None,  # Will be filled in by the client
-            "guild_id": self.guild_id,
-            "permissions": [perm.to_dict() for perm in self.permissions]
+            'id': self.id,
+            'application_id': None,  # Will be filled in by the client
+            'guild_id': self.guild_id,
+            'permissions': [perm.to_dict() for perm in self.permissions],
         }
 
 
@@ -1060,14 +1064,14 @@ class Interaction:
             self.options = []
         # Autocomplete details if this is an autocomplete interaction
         elif self.type == InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE:
-            self.command_name = self.data.get("name", "")
-            self.command_id = self.data.get("id")
-            self.options = self.data.get("options", [])
+            self.command_name = self.data.get('name', '')
+            self.command_id = self.data.get('id')
+            self.options = self.data.get('options', [])
             # The option that is currently being typed by the user
             self.focused_option = None
             # Find the option that has focus=True
             for option in self.options:
-                if option.get("focused", False):
+                if option.get('focused', False):
                     self.focused_option = option
                     break
         else:
@@ -1203,38 +1207,38 @@ class Interaction:
         # Get a client instance to respond
         client = _rust.DiscordClient(os.environ.get('DISCORD_TOKEN', ''))
         await client.create_interaction_response(self.id, self.token, data)
-        
-    async def respond_autocomplete(self, choices: List[Dict[str, Any]]) -> None:
+
+    async def respond_autocomplete(self, choices: list[dict[str, Any]]) -> None:
         """
         Respond to an autocomplete interaction with choices
-        
+
         Args:
             choices: List of choice objects with name and value properties
                 Example: [{'name': 'Choice 1', 'value': 'value1'}, ...]
         """
         # Import here to avoid circular imports
         from . import _rust
-        
+
         # Make sure this is an autocomplete interaction
         if self.type != InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE:
-            raise ValueError("This is not an autocomplete interaction")
-            
+            raise ValueError('This is not an autocomplete interaction')
+
         # Verify we have a valid interaction ID and token
         if not self.id or not self.token:
-            raise ValueError("Cannot respond to autocomplete without valid ID and token")
-            
+            raise ValueError(
+                'Cannot respond to autocomplete without valid ID and token'
+            )
+
         # Maximum 25 choices
         if len(choices) > 25:
             choices = choices[:25]
-            
+
         # Create autocomplete response data
         data = {
-            "type": InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT,
-            "data": {
-                "choices": choices
-            }
+            'type': InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT,
+            'data': {'choices': choices},
         }
-        
+
         # Get a client instance to respond
-        client = _rust.DiscordClient(os.environ.get("DISCORD_TOKEN", ""))
+        client = _rust.DiscordClient(os.environ.get('DISCORD_TOKEN', ''))
         await client.create_interaction_response(self.id, self.token, data)
