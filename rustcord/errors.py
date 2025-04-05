@@ -54,5 +54,5 @@ class ValidationError(DiscordError):
     def __init__(self, message: str, field: Optional[str] = None):
         self.field = field
         super().__init__(
-            f"Validation error{f' in \'{field}\'' if field else ''}: {message}"
+            f"Validation error{' in ' + repr(field) if field else ''}: {message}"
         )
