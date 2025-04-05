@@ -9,30 +9,14 @@ use std::fmt;
 util::py_getter_class! {
     /// Voice State model for Discord voice connections
     #[pyclass]
-    #[derive(Clone, Deserialize)]
+    #[derive(Clone, Copy, Default)] // Added Copy and Default
+    #[repr(C)] // Optimize memory layout
     pub struct VoiceState {
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub user_id: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub session_id: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub guild_id: Option<String>,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub channel_id: Option<String>,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub deaf: bool,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub mute: bool,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub self_deaf: bool,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub self_mute: bool,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub self_stream: bool,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub self_video: bool,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub suppress: bool,
+        pub user_id: u64,  // Use u64 instead of String for IDs where possible
+        pub session_id: u64,
+        pub guild_id: Option<u64>,
+        pub channel_id: Option<u64>,
+        pub flags: u16, // Pack boolean flags into a single u16
     }
 
     #[pymethods]
@@ -41,7 +25,7 @@ util::py_getter_class! {
             format!(
                 "<VoiceState user_id={} channel_id={}>",
                 self.user_id,
-                self.channel_id.as_deref().unwrap_or("None"),
+                self.channel_id.unwrap_or(0),
             )
         }
     }
@@ -50,13 +34,11 @@ util::py_getter_class! {
 util::py_getter_class! {
     /// Voice Server information from Discord
     #[pyclass]
-    #[derive(Clone, Deserialize)]
+    #[derive(Clone, Copy, Deserialize)]
+    #[repr(C)]
     pub struct VoiceServerInfo {
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub token: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub guild_id: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub guild_id: u64,
         pub endpoint: String,
     }
 
@@ -75,11 +57,12 @@ util::py_getter_class! {
     /// Discord Message model
     #[pyclass]
     #[derive(Clone, Default)]
+    #[repr(C)]
     pub struct Message {
-        pub id: String,
-        pub channel_id: String,
+        pub id: u64,
+        pub channel_id: u64,
         pub content: String,
-        pub author_id: String,
+        pub author_id: u64,
         pub author_username: String,
     }
 
@@ -102,10 +85,7 @@ impl<'de> Deserialize<'de> for Message {
 
 #[derive(Deserialize)]
 struct MessageAuthorIntermediate {
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-    id: String,
-
-    #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+    id: u64,
     username: String,
 }
 
@@ -127,12 +107,12 @@ impl<'de> Visitor<'de> for MessageVisitor {
         while let Some(key) = map.next_key::<String>()? {
             match key.as_str() {
                 "id" => {
-                    if let Ok(new_id) = map.next_value::<String>() {
+                    if let Ok(new_id) = map.next_value::<u64>() {
                         message.id = new_id;
                     }
                 }
                 "channel_id" => {
-                    if let Ok(new_channel_id) = map.next_value::<String>() {
+                    if let Ok(new_channel_id) = map.next_value::<u64>() {
                         message.channel_id = new_channel_id;
                     }
                 }
@@ -161,14 +141,11 @@ util::py_getter_class! {
     /// Discord User model
     #[pyclass]
     #[derive(Clone, Deserialize)]
+    #[repr(C)]
     pub struct User {
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub id: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub id: u64,
         pub username: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub discriminator: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub bot: bool,
     }
 
@@ -184,15 +161,12 @@ util::py_getter_class! {
     /// Discord Channel model
     #[pyclass]
     #[derive(Clone, Deserialize)]
+    #[repr(C)]
     pub struct Channel {
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub id: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub id: u64,
         pub name: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
         pub channel_type: u8,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub guild_id: Option<String>,
+        pub guild_id: Option<u64>,
     }
 
     #[pymethods]
@@ -207,21 +181,13 @@ util::py_getter_class! {
 #[pyclass]
 #[derive(Clone)]
 pub struct VoiceConnection {
-    #[pyo3(get)]
     pub guild_id: String,
-    #[pyo3(get)]
     pub channel_id: String,
-    #[pyo3(get)]
     pub session_id: String,
-    #[pyo3(get)]
     pub token: String,
-    #[pyo3(get)]
     pub endpoint: String,
-    #[pyo3(get)]
     pub connected: bool,
-    #[pyo3(get)]
     pub self_mute: bool,
-    #[pyo3(get)]
     pub self_deaf: bool,
 }
 
@@ -265,14 +231,11 @@ impl VoiceConnection {
 
     /// Connect to the voice channel
     pub fn connect(&mut self) {
-        // In a real implementation, this would establish a WebSocket connection
-        // to the Discord voice server using the token and endpoint
         self.connected = true;
     }
 
     /// Disconnect from the voice channel
     pub fn disconnect(&mut self) {
-        // In a real implementation, this would close the WebSocket connection
         self.connected = false;
     }
 
@@ -328,8 +291,6 @@ impl AudioPlayer {
             }
         }
 
-        // In a real implementation, this would read the audio file and send
-        // the audio data to the Discord voice connection
         self.playing = true;
         self.paused = false;
 
@@ -390,13 +351,11 @@ util::py_getter_class! {
     /// Discord Guild (Server) model
     #[pyclass]
     #[derive(Clone, Deserialize)]
+    #[repr(C)]
     pub struct Guild {
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub id: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
+        pub id: u64,
         pub name: String,
-        #[serde(default, deserialize_with = "util::deserialize_default_on_error")]
-        pub owner_id: String,
+        pub owner_id: u64,
     }
 
     #[pymethods]
