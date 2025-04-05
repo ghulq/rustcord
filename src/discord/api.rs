@@ -4,56 +4,89 @@ use super::{
     models::{Channel, Guild, Message, User},
     url,
 };
-use pyo3::{PyClass, prelude::*};
+use dashmap::DashMap;
+use pyo3::{prelude::*, PyClass};
 use reqwest::{Client as ReqwestClient, Method, header};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::json;
 use std::{sync::Arc, time::Duration};
 use tokio::runtime::Runtime;
 
-/// High-performance Rust client for Discord API interactions
 #[pyclass]
 pub struct DiscordClient {
-    http_client: ReqwestClient,
+    http_client: Arc<ReqwestClient>,
     runtime: Arc<Runtime>,
+    cache: Arc<DashMap<String, Vec<u8>>>,
 }
 
 impl DiscordClient {
+    async fn request_internal<T>(
+        client: Arc<ReqwestClient>, 
+        method: Method,
+        url: String,
+        data: Vec<u8>,
+        cache: Arc<DashMap<String, Vec<u8>>>,
+    ) -> Result<T, DiscordError> 
+    where
+        T: DeserializeOwned,
+    {
+        // Check cache for GET requests
+        if method == Method::GET {
+            if let Some(cached) = cache.get(&url) {
+                if let Ok(parsed) = serde_json::from_slice(cached.value()) {
+                    return Ok(parsed);
+                }
+            }
+        }
+
+        let response = client
+            .request(method.clone(), url.clone())
+            .body(data)
+            .send()
+            .await
+            .map_err(|e| {
+                DiscordError::ApiError(format!(
+                    "[{method} {url}] Failed to send request: {e}"
+                ))
+            })?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await;
+            return Err(DiscordError::ApiError(format!(
+                "[{method} {url}] Discord API error: {status} - {}",
+                error_text.unwrap_or_else(|_| "Unknown error".to_string())
+            )));
+        }
+
+        let bytes = response.bytes().await.map_err(|e| {
+            DiscordError::ParseError(format!(
+                "[{method} {url}] Failed to get response bytes: {e}"
+            ))
+        })?;
+
+        // Cache successful GET responses
+        if method == Method::GET {
+            cache.insert(url.clone(), bytes.to_vec());
+        }
+
+        serde_json::from_slice(&bytes).map_err(|e| {
+            DiscordError::ParseError(format!(
+                "[{method} {url}] Failed to parse response: {e}"
+            ))
+        })
+    }
+
     fn request<T>(&self, method: Method, url: String, data: Vec<u8>) -> PyResult<T>
     where
         T: DeserializeOwned,
     {
         let client = self.http_client.clone();
+        let cache = self.cache.clone();
 
         self.runtime
-            .block_on(async move {
-                let response = client
-                    .request(method.clone(), url.clone())
-                    .body(data)
-                    .send()
-                    .await
-                    .map_err(|e| {
-                        DiscordError::ApiError(format!(
-                            "[{method} {url}] Failed to send request: {e}"
-                        ))
-                    })?;
-
-                if !response.status().is_success() {
-                    let status = response.status();
-                    let error_text = response.text().await;
-                    return Err(DiscordError::ApiError(format!(
-                        "[{method} {url}] Discord API error: {status} - {}",
-                        error_text.as_deref().unwrap_or("Unknown error")
-                    )));
-                }
-
-                response.json::<T>().await.map_err(|e| {
-                    DiscordError::ParseError(format!(
-                        "[{method} {url}] Failed to parse response: {e}"
-                    ))
-                })
-            })
-            .map_err(|e: DiscordError| e.to_pyerr())
+            .block_on(Self::request_internal(client, method, url, data, cache))
+            .map_err(|e| e.to_pyerr())
     }
 
     fn get<T>(&self, url: String, py: Python) -> PyResult<Py<T>>
@@ -92,19 +125,13 @@ impl DiscordClient {
 
 #[pymethods]
 impl DiscordClient {
-    /// Creates a new DiscordClient with the given token
     #[new]
     pub fn new(token: String) -> PyResult<Self> {
-        // Create a custom HTTP client with appropriate headers and timeouts
-        let mut headers = header::HeaderMap::new();
-        let auth_value = format!("Bot {token}");
+        let mut headers = header::HeaderMap::with_capacity(3);
         headers.insert(
             header::AUTHORIZATION,
-            header::HeaderValue::from_str(&auth_value).map_err(
-                |e: header::InvalidHeaderValue| {
-                    DiscordError::InvalidToken(e.to_string()).to_pyerr()
-                },
-            )?,
+            header::HeaderValue::from_str(&format!("Bot {token}"))
+                .map_err(|e| DiscordError::InvalidToken(e.to_string()).to_pyerr())?,
         );
 
         headers.insert(
@@ -120,16 +147,18 @@ impl DiscordClient {
         let http_client = ReqwestClient::builder()
             .default_headers(headers)
             .timeout(Duration::from_secs(30))
+            .pool_idle_timeout(Duration::from_secs(90))
+            .tcp_keepalive(Duration::from_secs(60))
             .build()
             .map_err(|e| DiscordError::HttpClientError(e.to_string()).to_pyerr())?;
 
-        // Create a Tokio runtime for async operations
-        let runtime =
-            Runtime::new().map_err(|e| DiscordError::RuntimeError(e.to_string()).to_pyerr())?;
+        let runtime = Runtime::new()
+            .map_err(|e| DiscordError::RuntimeError(e.to_string()).to_pyerr())?;
 
         Ok(Self {
-            http_client,
+            http_client: Arc::new(http_client),
             runtime: Arc::new(runtime),
+            cache: Arc::new(DashMap::new()),
         })
     }
 
