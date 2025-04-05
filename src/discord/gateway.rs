@@ -1,4 +1,5 @@
 use super::{errors::DiscordError, util};
+use dashmap::DashMap;
 use futures::{SinkExt, StreamExt};
 use pyo3::{prelude::*, types::PyDict};
 use rand::Rng;
@@ -7,7 +8,7 @@ use serde_json::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex as StdMutex},
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime},
 };
 use tokio::{
     runtime::Runtime,
@@ -39,11 +40,12 @@ pub(crate) struct GatewayData {
 struct SharedGatewayClient {
     token: String,
     runtime: Runtime,
-    last_heartbeat_ack: Mutex<Instant>,
-    session_id: Mutex<Option<String>>,
-    sequence: Mutex<Option<u64>>,
-    event_callbacks: StdMutex<HashMap<String, PyObject>>,
-    heartbeat_interval: Mutex<Option<u64>>,
+    last_heartbeat_ack: tokio::sync::Mutex<SystemTime>,
+    session_id: tokio::sync::Mutex<Option<String>>,
+    sequence: tokio::sync::Mutex<Option<u64>>,
+    event_callbacks: tokio::sync::Mutex<DashMap<String, PyObject>>,
+    heartbeat_interval: tokio::sync::Mutex<Option<u64>>,
+    connection_attempts: tokio::sync::Mutex<u32>,
 }
 
 impl SharedGatewayClient {
@@ -51,12 +53,19 @@ impl SharedGatewayClient {
         Self {
             token,
             runtime,
-            last_heartbeat_ack: Mutex::new(Instant::now()),
-            session_id: Mutex::default(),
-            sequence: Mutex::default(),
-            event_callbacks: StdMutex::default(),
-            heartbeat_interval: Mutex::default(),
+            last_heartbeat_ack: tokio::sync::Mutex::new(SystemTime::now()),
+            session_id: tokio::sync::Mutex::default(),
+            sequence: tokio::sync::Mutex::default(),
+            event_callbacks: tokio::sync::Mutex::new(DashMap::new()),
+            heartbeat_interval: tokio::sync::Mutex::default(),
+            connection_attempts: tokio::sync::Mutex::new(0),
         }
+    }
+
+    async fn increment_connection_attempts(&self) -> u32 {
+        let mut attempts = self.connection_attempts.lock().await;
+        *attempts += 1;
+        *attempts
     }
 }
 
@@ -432,7 +441,7 @@ async fn process_gateway_messages(
                     GATEWAY_OP_HEARTBEAT_ACK => {
                         // Update last heartbeat acknowledgement time
                         let mut ack_guard = shared.last_heartbeat_ack.lock().await;
-                        *ack_guard = Instant::now();
+                        *ack_guard = SystemTime::now();
                     }
                     _ => {
                         // Unhandled operation code
@@ -480,18 +489,27 @@ async fn handle_heartbeats(
 
             // Check if we've received a heartbeat ACK recently
             let last_ack = *shared.last_heartbeat_ack.lock().await;
-            if last_ack.elapsed() > Duration::from_millis(heartbeat_ms * 2) {
-                eprintln!("Heartbeat ACK not received in time, closing connection");
+            if let Ok(elapsed) = last_ack.elapsed() {
+                if elapsed > Duration::from_millis(heartbeat_ms * 2) {
+                    eprintln!("Heartbeat ACK not received in time, closing connection");
+                    break;
+                }
+            } else {
+                eprintln!("Failed to calculate elapsed time since last heartbeat ACK");
                 break;
             }
 
+
             // Time to send a heartbeat?
             let send_heartbeat = {
-                static mut LAST_HEARTBEAT: Option<Instant> = None;
+                static mut LAST_HEARTBEAT: Option<SystemTime> = None;
                 unsafe {
-                    let now = Instant::now();
+                    let now = SystemTime::now();
                     let should_send = match LAST_HEARTBEAT {
-                        Some(last) => now.duration_since(last).as_millis() >= heartbeat_ms as u128,
+                        Some(last) => match now.duration_since(last) {
+                            Ok(duration) => duration.as_millis() >= heartbeat_ms as u128,
+                            Err(_) => true, //assume we should send if error calculating duration
+                        },
                         None => true,
                     };
 
