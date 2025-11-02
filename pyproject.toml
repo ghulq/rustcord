@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
 
 [project]
 name = "rustcord"
@@ -36,9 +36,6 @@ Homepage = "https://github.com/ghulq/rustcord"
 Documentation = "https://github.com/ghulq/rustcord#readme"
 Source = "https://github.com/ghulq/rustcord"
 
-[tool.setuptools]
-packages = ["rustcord"]
-include-package-data = true
-
-[tool.setuptools.package-data]
-rustcord = ["*.so", "*.dll", "*.dylib"]
+[tool.maturin]
+python-source = "rustcord"
+module-name = "rustcord._rust"

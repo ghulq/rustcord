@@ -6,11 +6,11 @@ authors = ["ghulq"]
 description = "Rust core for rustcord Discord API interactions"
 
 [lib]
-name = "rustcord"
+name = "_rust"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.18.1", features = ["extension-module", "abi3-py38"] }
+pyo3 = { version = "0.18.1", features = ["extension-module", "abi3-py39"] }
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.18", features = ["native-tls"] }
