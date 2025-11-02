@@ -34,7 +34,7 @@ util::py_getter_class! {
 util::py_getter_class! {
     /// Voice Server information from Discord
     #[pyclass]
-    #[derive(Clone, Copy, Deserialize)]
+    #[derive(Clone, Deserialize)]
     #[repr(C)]
     pub struct VoiceServerInfo {
         pub token: String,

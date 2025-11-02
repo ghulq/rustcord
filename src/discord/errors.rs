@@ -3,6 +3,7 @@ use pyo3::{PyErr, exceptions::PyRuntimeError, prelude::*};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
+#[allow(dead_code)]
 pub enum DiscordError {
     #[error("API error: {0}")]
     ApiError(String),
