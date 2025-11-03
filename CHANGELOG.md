@@ -5,23 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-11-03
+
+### Added
+- Support for Discord normalization
+- Bucket Metrics and Observability
+- Per-route rate-limiting
+
+### Changed
+- Rate-limiting retry in Rust REST client
+- Heartbeat fix
+
 ## [0.1.4] - 2025-04-05
 
 ### Changed
-
 - Optimization of the Rust code for better async support
 
 ## [0.1.3] - 2025-04-04
 
 ### Added
-
 - Support for autocomplete
 - Support for permission based commands
 
 ## [0.1.2] - 2025-04-03
 
 ### Changed
-
 - Updated pyproject.toml with the right metadata
 - Fixed repository links in package metadata
 

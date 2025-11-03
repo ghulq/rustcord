@@ -1,6 +1,6 @@
 [package]
 name = "rustcord"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2024"
 authors = ["ghulq"]
 description = "Rust core for rustcord Discord API interactions"
@@ -26,3 +26,4 @@ dashmap = "5.4"
 bytes = "1.4"
 rand = "0.8"
 pkg-config = "0.3.32"
+tracing = "0.1"
