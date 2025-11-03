@@ -279,8 +279,27 @@ class Client:
 
     async def get_user(self, user_id: str) -> Optional[User]:
         """Get a user by ID"""
-        # Not yet implemented
-        raise NotImplementedError('get_user method is not yet implemented')
+        try:
+            # Prefer a Rust-backed implementation if available
+            user = await self.rest_client.get_user(user_id)
+            return User(_rust_obj=user)
+        except AttributeError:
+            # Fallback: call the REST API directly via the Rust client helper
+            try:
+                response = await self.rest_client._api_request('GET', f'/users/{user_id}')
+                # Create a User model from returned fields
+                return User(_rust_obj=None, **{
+                    'id': response.get('id', ''),
+                    'username': response.get('username', ''),
+                    'discriminator': response.get('discriminator', '0'),
+                    'bot': response.get('bot', False),
+                })
+            except Exception as e:
+                logger.error(f'Failed to get user {user_id}: {e}')
+                return None
+        except Exception as e:
+            logger.error(f'Failed to get user {user_id}: {e}')
+            return None
 
     async def get_channel(self, channel_id: str) -> Optional[Channel]:
         """Get a channel by ID"""
@@ -292,8 +311,25 @@ class Client:
 
     async def get_guild(self, guild_id: str) -> Optional[Guild]:
         """Get a guild by ID"""
-        # Will be implemented when we have the Rust backend
-        logger.warning('get_guild method is not yet fully implemented')
+        try:
+            # Prefer a Rust-backed implementation if available
+            guild = await self.rest_client.get_guild(guild_id)
+            return Guild(_rust_obj=guild)
+        except AttributeError:
+            # Fallback: call the REST API directly
+            try:
+                response = await self.rest_client._api_request('GET', f'/guilds/{guild_id}')
+                return Guild(_rust_obj=None, **{
+                    'id': response.get('id', ''),
+                    'name': response.get('name', ''),
+                    'owner_id': response.get('owner_id', response.get('owner_id', '')),
+                })
+            except Exception as e:
+                logger.error(f'Failed to get guild {guild_id}: {e}')
+                return None
+        except Exception as e:
+            logger.error(f'Failed to get guild {guild_id}: {e}')
+            return None
 
     async def get_current_user(self) -> Optional[User]:
         """Get the current bot user"""

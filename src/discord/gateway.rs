@@ -41,6 +41,7 @@ struct SharedGatewayClient {
     token: String,
     runtime: Runtime,
     last_heartbeat_ack: tokio::sync::Mutex<SystemTime>,
+    last_heartbeat_sent: tokio::sync::Mutex<Option<SystemTime>>,
     session_id: tokio::sync::Mutex<Option<String>>,
     sequence: tokio::sync::Mutex<Option<u64>>,
     event_callbacks: DashMap<String, PyObject>,
@@ -54,6 +55,7 @@ impl SharedGatewayClient {
             token,
             runtime,
             last_heartbeat_ack: tokio::sync::Mutex::new(SystemTime::now()),
+            last_heartbeat_sent: tokio::sync::Mutex::new(None),
             session_id: tokio::sync::Mutex::default(),
             sequence: tokio::sync::Mutex::default(),
             event_callbacks: DashMap::new(),
@@ -461,18 +463,20 @@ async fn handle_heartbeats(
 
             // naive throttle: send if elapsed >= heartbeat_ms
             let send_heartbeat = {
-                static mut LAST_HEARTBEAT: Option<SystemTime> = None;
-                unsafe {
-                    let now = SystemTime::now();
-                    let should_send = match LAST_HEARTBEAT {
-                        Some(last) => now.duration_since(last).map(|d| d.as_millis() >= heartbeat_ms as u128).unwrap_or(true),
-                        None => true,
-                    };
-                    if should_send {
-                        LAST_HEARTBEAT = Some(now);
-                    }
-                    should_send
+                // Track last heartbeat send time in shared state (per-connection)
+                let mut last_sent_guard = shared.last_heartbeat_sent.lock().await;
+                let now = SystemTime::now();
+                let should_send = match *last_sent_guard {
+                    Some(last) => now
+                        .duration_since(last)
+                        .map(|d| d.as_millis() >= heartbeat_ms as u128)
+                        .unwrap_or(true),
+                    None => true,
+                };
+                if should_send {
+                    *last_sent_guard = Some(now);
                 }
+                should_send
             };
 
             if send_heartbeat {
